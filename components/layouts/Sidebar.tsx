@@ -25,20 +25,25 @@ const SidebarAdmin = () => {
   ];
   
   return (
-    <aside className="w-72 bg-base-100 border-r border-base-content/5 flex flex-col h-screen sticky top-0">
-      <div className="p-8">
+    <aside className="w-72 bg-base-100 border-r border-base-content/5 flex flex-col h-full">
+      <div className="p-8 flex items-center justify-between">
         <Link href="/dashboard" className="text-2xl font-black tracking-tighter uppercase text-primary">
           BIKIN<span className="text-base-content">CETAK</span>
         </Link>
+        
+        <label htmlFor="my-drawer-2" className="lg:hidden btn btn-sm btn-circle btn-ghost">
+           ✕
+        </label>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1">
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {menus.map((menu) => {
           const isActive = pathname === menu.href;
           return (
             <Link 
               key={menu.href}
               href={menu.href} 
+              onClick={() => document.getElementById('my-drawer-2')?.click()}
               className={`
                 flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 group
                 ${isActive 

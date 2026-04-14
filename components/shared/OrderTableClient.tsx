@@ -51,9 +51,9 @@ export default function OrderTableClient({ initialData }: { initialData: Order[]
           <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.2em]">Monitoring Tagihan & Pengiriman</p>
         </div>
         
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+        <div className="flex gap-2 w-full md:w-auto">
           <input 
-            type="text" 
+            type="text"   
             placeholder="Cari Pesanan..." 
             className="input input-bordered w-full md:w-64 rounded-2xl bg-base-100 font-bold text-xs"
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
