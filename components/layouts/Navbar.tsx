@@ -1,18 +1,38 @@
 "use client";
-import { useState } from 'react';
-import { Search, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, User, LogOut, LayoutDashboard } from 'lucide-react';
 import SwapTheme from '../ui/SwapTheme';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { PRODUCT_CATEGORIES } from "@/lib/data";
 import { slugify } from "@/lib/utils";
 
 const Navbar = () => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const pathname = usePathname();
+  const router = useRouter();  
+
+  useEffect(() => {
+    const checkStatus = () => {
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
+        const status: boolean = token !== null && token !== "";
+        setIsLoggedIn(status);
+      }
+    };
+
+    checkStatus();
+  },[pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    router.push("/");
+    router.refresh();
+  };
 
   const isHome = pathname === '/';
-
   const toggleMenu = (key: string) => {
     setOpenMenu(openMenu === key ? null : key);
   };
@@ -59,10 +79,20 @@ const Navbar = () => {
         </div>
 
         <div className="navbar-end gap-3">
-          <Link href="/login" className="btn btn-ghost hidden md:flex border-none hover:bg-primary/10 group">
-            <User size={18} className="text-primary group-hover:scale-110 transition-transform" />
-            <span>Sign Up / Sign In</span>
-          </Link>
+          {/* LOGIC TOMBOL LOGIN / USER MENU */}
+          {!isLoggedIn ? (
+            <Link href="/login" className="btn btn-ghost hidden md:flex border-none hover:bg-primary/10 group">
+              <User size={18} className="text-primary group-hover:scale-110 transition-transform" />
+              <span className="font-bold text-xs uppercase tracking-widest">Sign In</span>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+               <button onClick={handleLogout} className="btn btn-error btn-outline btn-sm gap-2 font-black text-[10px] uppercase">
+                 <LogOut size={16} />
+                 <span className="hidden sm:inline">Keluar</span>
+               </button>
+            </div>
+          )}
           <SwapTheme />
         </div>
       </div>

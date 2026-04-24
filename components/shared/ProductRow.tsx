@@ -4,7 +4,6 @@ import { slugify } from "@/lib/utils";
 
 interface ProductItem {
   name: string;
-  price: string;
   image?: string;
 }
 
@@ -47,7 +46,7 @@ const ProductRow = ({ title, data }: ProductRowProps) => {
               <h2 className="card-title text-sm md:text-base leading-tight h-10 line-clamp-2">
                 {item.name}
               </h2>
-              <p className="text-sm md:text-base text-primary font-bold">{item.price}</p>
+              {/* <p className="text-sm md:text-base text-primary font-bold">{item.price}</p> */}
             </div>
           </div>
         ))}

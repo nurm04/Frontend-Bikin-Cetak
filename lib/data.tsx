@@ -1,3 +1,4 @@
+// @/lib/data.tsx
 export interface FormField {
   label: string;
   name: string; // Attribute di ERPNext

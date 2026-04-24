@@ -1,3 +1,4 @@
+// @/components/ui/FileUpload
 "use client";
 
 import { useState, useRef } from "react";
@@ -25,7 +26,7 @@ export default function FileUpload() {
   };
 
   return (
-    <fieldset className="fieldset bg-base-100 border-base-content/5 rounded-lg border p-8 shadow-sm">
+    <fieldset className="fieldset bg-base-100 border-base-content/5 -mt-5 rounded-2xl border p-8 shadow-sm">
       <legend className="fieldset-legend text-primary font-black uppercase tracking-widest px-4">
         <Upload size={16} className="inline mr-2" /> File Desain
       </legend>
@@ -52,7 +53,7 @@ export default function FileUpload() {
               className="mb-4 opacity-20 group-hover:text-primary group-hover:opacity-100 transition-all"
               size={40}
             />
-            <p className="text-xs font-bold uppercase opacity-50 tracking-tighter">
+            <p className="text-xs text-center font-bold uppercase opacity-50 tracking-tighter">
               Klik atau seret file desain ke sini
             </p>
           </>

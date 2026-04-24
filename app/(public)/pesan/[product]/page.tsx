@@ -1,12 +1,11 @@
+// @/app/(public)/pesan/[product]/page.tsx
 import { PRODUCT_CATEGORIES } from "@/lib/data";
 import { slugify } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { User, Phone, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import FormPesan from "@/components/shared/FormPesan";
-import FormInput from "@/components/ui/FormInput";
 import FileUpload from "@/components/ui/FileUpload";
-import FormTextarea from "@/components/ui/FormTextarea";
 
 interface PageProps {
   params: Promise<{ product: string }>;
@@ -43,7 +42,7 @@ export default async function LayoutPesan({ params }: PageProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <FormPesan categoryLabel={productData.name} fields={productData.fields} />
+            <FormPesan fields={productData.fields} />
 
             <FileUpload />
           </div>
@@ -51,33 +50,10 @@ export default async function LayoutPesan({ params }: PageProps) {
           <div className="lg:col-span-1">
             <fieldset className="fieldset bg-base-100 border-base-content/5 rounded-lg border p-8 shadow-md sticky top-24">
               <legend className="fieldset-legend text-primary font-black uppercase tracking-widest px-4">
-                Data Pemesan
+                Total
               </legend>
 
-              <div className="space-y-5">
-								<FormInput
-									label="Nama Penerima"
-									name="nama_penerima" 
-									type="text"
-									placeholder="Nama Penerima"
-									icon={<User size={18} className="opacity-30" />}
-								/>
-								<FormInput
-									label="WhatsApp"
-									name="no_hp" 
-									type="tel"
-									placeholder="0812..."
-									icon={<Phone size={18} className="opacity-30" />}
-								/>
-								<FormTextarea
-									label="Alamat Lengkap" 
-									name="alamat" 
-									placeholder="Alamat pengiriman..."
-									className="bg-base-200 border-none rounded-2xl font-medium"
-								/>
-
-                <div className="divider"></div>
-
+              <div className="">
                 <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
                   <p className="text-[10px] font-bold uppercase text-primary mb-1">Total Estimasi</p>
                   <p className="text-2xl font-black text-primary">{productData.price}</p>

@@ -30,7 +30,7 @@ const ProductCarousel = ({ image, name }: ProductCarouselProps) => {
           </div>
         </div>
         
-        <div className="flex justify-start gap-3 py-4 overflow-x-auto scrollbar-hide">
+        <div className="flex justify-start gap-3 pt-4 overflow-x-auto scrollbar-hide">
           <a href="#item1" className="shrink-0 transition hover:scale-105 active:scale-95">
             <div className="w-16 h-16 relative border-2 rounded-xl border-base-300 hover:border-primary overflow-hidden">
               <Image alt="thumb 1" fill src={image} className="object-cover" />
