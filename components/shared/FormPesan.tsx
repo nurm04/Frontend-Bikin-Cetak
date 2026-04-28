@@ -1,3 +1,4 @@
+// @/components/ui/FormPesan.tsx (atau path yang sesuai)
 "use client";
 
 import FormInput from "@/components/ui/FormInput";
@@ -12,8 +13,8 @@ interface FormField {
 
 interface FormPesanProps {
   fields: FormField[];
-  values: Record<string, string>;
-  onValueChange: (name: string, value: string) => void;
+  values?: Record<string, string>; // <-- Tambahkan "?" agar opsional
+  onValueChange?: (name: string, value: string) => void; // <-- Tambahkan "?" agar opsional
 }
 
 export default function FormPesan({ fields, values, onValueChange }: FormPesanProps) {
@@ -25,7 +26,7 @@ export default function FormPesan({ fields, values, onValueChange }: FormPesanPr
             label={field.label} 
             name={field.name} 
             options={field.options || []}
-            value={values[field.name]}
+            value={values?.[field.name] || ""} 
             onChange={onValueChange}
           />
         </div>
