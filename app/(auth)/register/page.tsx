@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import RegisterForm from "@/components/shared/RegisterForm";
+import Image from "next/image";
 
 export default function RegisterPage() {
   return (
@@ -14,11 +15,17 @@ export default function RegisterPage() {
 
       <div className="card w-full max-w-md bg-base-100 shadow-2xl border border-base-content/5 rounded-[2.5rem] overflow-hidden">
         <div className="card-body p-8 md:p-12">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-black text-primary tracking-tighter uppercase italic">
-              BIKIN <span className="text-base-content">CETAK</span>
-            </h1>
-            <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.2em] mt-1">Gabung Bikin Cetak Sekarang</p>
+          <div className="flex flex-col items-center mb-10">
+            <div className="relative w-16 h-16 mb-2">
+              <Image 
+                src="/favicon.ico" 
+                alt="Logo" 
+                fill 
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div className="h-1.5 w-8 bg-primary rounded-full"></div>
           </div>
 
           <RegisterForm />

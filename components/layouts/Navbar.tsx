@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Search, User, LogOut } from 'lucide-react';
 import SwapTheme from '../ui/SwapTheme';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { ItemData } from "@/services/itemService";
 import { slugify } from "@/lib/utils";
@@ -42,7 +43,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
   };
 
   const dynamicCategories = items
-  .filter((group) => group.item_group_name.toLowerCase() !== "services") // Saring di sini
+  .filter((group) => group.item_group_name.toLowerCase() !== "services")
   .map((group) => ({
     key: slugify(group.item_group_name),
     label: group.item_group_name,
@@ -78,8 +79,19 @@ const Navbar = ({ items = [] }: NavbarProps) => {
               ))}
             </ul>
           </div>
-          <Link href="/" className="btn btn-ghost text-2xl font-bold text-primary tracking-tighter">
-            BIKIN<span className="text-base-content">CETAK</span>
+          <Link href="/" className="btn btn-ghost p-0 px-2 flex items-center gap-2 hover:bg-transparent">
+            <div className="relative w-8 h-8 md:w-10 md:h-10">
+              <Image 
+                src="/favicon.ico" 
+                alt="BikinCetak Logo" 
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <span className="text-xl font-black text-primary tracking-tighter hidden md:block">
+              BIKIN<span className="text-base-content">CETAK</span>
+            </span>
           </Link>
         </div>
 

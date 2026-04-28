@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import LoginForm from "@/components/shared/LoginForm";
 
@@ -14,11 +15,17 @@ export default function LoginPage() {
 
       <div className="card w-full max-w-md bg-base-100 shadow-2xl border border-base-content/5 rounded-[2.5rem] overflow-hidden">
         <div className="card-body p-8 md:p-12">
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-black text-primary tracking-tighter uppercase italic">
-              BIKIN <span className="text-base-content">CETAK</span>
-            </h1>
-            <div className="h-1.5 w-8 bg-primary mx-auto rounded-full mt-1"></div>
+          <div className="flex flex-col items-center mb-10">
+            <div className="relative w-16 h-16 mb-2">
+              <Image 
+                src="/favicon.ico" 
+                alt="Logo" 
+                fill 
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div className="h-1.5 w-8 bg-primary rounded-full"></div>
           </div>
 
           <LoginForm />
