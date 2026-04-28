@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'continuing-tue-pen-held.trycloudflare.com',
+        hostname: 'triple-admission-reproduce-thu.trycloudflare.com',
         port: '',
         pathname: '/**',
       },

@@ -46,6 +46,17 @@ export default function ProductAction({ initialVariant, itemName, mappedFields }
   return (
     <div className="space-y-6">
       <div className={`mt-4 transition-all ${loading ? "opacity-40" : "opacity-100"}`}>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-3">
+            Deskripsi Produk
+          </p>
+          <article className="prose prose-sm max-w-none text-base-content/70">
+            <p>Cetak <strong>{variant?.description}</strong> dengan spesifikasi khusus. Kami menggunakan bahan berkualitas tinggi yang diproses langsung dari gudang produksi kami.</p>
+          </article>
+        </div>
+
+        <div className="divider"></div>
+      
         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-3">
           Daftar Harga Grosir ({variant?.uom || 'Pcs'})
         </p>
@@ -61,7 +72,7 @@ export default function ProductAction({ initialVariant, itemName, mappedFields }
               {variant?.pricing_rules.map((rule, index) => (
                 <tr key={index}>
                   <td>{rule.max_qty === 0 ? `≥ ${rule.min_qty}` : `${rule.min_qty} - ${rule.max_qty}`}</td>
-                  <td className="text-right text-primary font-black italic">
+                  <td className="text-right text-primary font-black">
                     Rp {rule.rate.toLocaleString("id-ID")}
                   </td>
                 </tr>

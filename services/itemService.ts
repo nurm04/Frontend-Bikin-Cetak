@@ -1,3 +1,5 @@
+"use server";
+
 export interface PricingRule {
   min_qty: number;
   max_qty: number;

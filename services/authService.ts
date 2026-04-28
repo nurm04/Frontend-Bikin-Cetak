@@ -1,3 +1,5 @@
+"use server";
+
 const BASE_URL = "https://bikincetak-api.up.railway.app/v1";
 
 // Interface untuk Register
