@@ -1,8 +1,20 @@
 import HeroCarousel from "@/components/ui/HeroCarousel";
 import ProductRow from "@/components/shared/ProductRow";
-import { PRODUCT_CATEGORIES } from "@/lib/data";
+import { getItems } from "@/services/itemService";
 
-export default function Home() {
+export default async function Home() {
+  const items = await getItems();
+  const dynamicCategories = items
+    .filter((group) => group.item_group_name.toLowerCase() !== "services")
+    .map((group) => ({
+      key: group.item_group_name,
+      label: group.item_group_name,
+      submenu: group.templates.map((t) => ({
+        name: t.item_name,
+        image: t.image_url || "/images/placeholder-product.jpg"
+      }))
+    }));
+
   return (
     <main className="min-h-screen bg-base-200">
       <div className="py-4 md:py-8">
@@ -10,7 +22,7 @@ export default function Home() {
       </div>
 
       <div className="container mx-auto px-4 md:px-12 pb-20">
-        {PRODUCT_CATEGORIES.map((category) => (
+        {dynamicCategories.map((category) => (
           <ProductRow 
             key={category.key} 
             title={category.label} 

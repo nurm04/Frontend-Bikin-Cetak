@@ -1,10 +1,18 @@
 "use client";
+
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import { ItemData } from "@/services/itemService"; // Sesuaikan path ini jika berbeda
 
-export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
+interface ConditionalLayoutProps {
+  children: React.ReactNode;
+  items: ItemData[];
+}
+
+export default function ConditionalLayout({ children, items }: ConditionalLayoutProps) {
   const pathname = usePathname();
+  // Tambahkan path lain di sini jika ada halaman yang tidak butuh Navbar/Footer
   const disableLayout = ["/login", "/register"].includes(pathname);
 
   if (disableLayout) {
@@ -13,9 +21,9 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
 
   return (
     <>
-      <Navbar />
+      <Navbar items={items} />
       <main className="flex-grow">{children}</main>
-      <Footer />
+      <Footer items={items} />
     </>
   );
 }

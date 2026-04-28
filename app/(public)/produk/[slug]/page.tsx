@@ -6,10 +6,9 @@ import ProductCarousel from "@/components/ui/ProductCarousel";
 import { CheckCircle, Truck, ShieldCheck, Award } from "lucide-react";
 import { ReactNode } from "react";
 import Link from "next/link";
-import FormPesan from "@/components/shared/FormPesan";
 import FileUpload from "@/components/ui/FileUpload";
-// IMPORT SERVICE BARU
-import { getItems } from "@/services/itemService";
+import { getItems, getVariantDetail } from "@/services/itemService";
+import ProductAction from "@/components/shared/ProductAction";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -17,31 +16,43 @@ interface PageProps {
 
 export default async function Produk({ params }: PageProps) {
   const { slug } = await params;
-
-  // 1. AMBIL DATA DARI API
-  const allItems = await getItems();
-
-  // 2. CARI PRODUK BERDASARKAN SLUG (slugify dari item_name)
-  const foundItem = allItems.find((item) => slugify(item.item_name) === slug);
-
+  const itemGroups = await getItems();
+  
+  const currentGroup = itemGroups.find((group) => 
+    group.templates.some((t) => slugify(t.item_name) === slug)
+  );
+  
+  if (!currentGroup) return notFound();
+  
+  const foundItem = currentGroup.templates.find(
+    (t) => slugify(t.item_name) === slug
+  );
+  
   if (!foundItem) return notFound();
 
-  // 3. KONVERSI ATTRIBUTES API KE FORMAT FIELDS (Buat FormPesan)
-  // Biar komponen FormPesan lu nggak error, kita map format API ke format field yang diharapkan
   const mappedFields = foundItem.attributes.map((attr) => ({
-    name: attr.attribute, // Nama Select (bahan, ukuran, dll)
+    name: attr.attribute,
     label: attr.attribute,
     type: "select",
-    options: attr.attribute_value.map((v) => v.value), // Value dari Select
+    options: attr.attribute_values.map((v) => v.attribute_value),
   }));
 
-  // 4. REKOMENDASI (Ambil 4 produk lain selain yang lagi dibuka)
-  const recommendations = allItems
-    .filter((item) => item.item_name == foundItem.item_name)
+  const initialAttributes: Record<string, string> = {};
+  mappedFields.forEach(field => {
+    if (field.options && field.options.length > 0) {
+      initialAttributes[field.name] = field.options[0]; 
+    }
+  });
+
+  const initialVariant = await getVariantDetail(foundItem.item_name, initialAttributes);
+
+  const products = currentGroup.templates;
+  const recommendations = products
+    .filter((item) => item.item_name !== foundItem.item_name)
     .slice(0, 4)
     .map((item) => ({
       name: item.item_name,
-      image: "/images/placeholder-product.jpg"
+      image: item.image_url || "/images/placeholder-product.jpg"
     }));
 
   return (
@@ -52,7 +63,7 @@ export default async function Produk({ params }: PageProps) {
           <div className="lg:col-span-3 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-base-100 p-6 rounded-2xl shadow-sm border border-base-content/5">
               
-              <ProductCarousel image="/images/placeholder-product.jpg" name={foundItem.item_name} />
+              <ProductCarousel image={foundItem.image_url} name={foundItem.item_name} />
 
               <div className="flex flex-col h-full">
                 <div className="mb-6">
@@ -61,75 +72,30 @@ export default async function Produk({ params }: PageProps) {
                   </h1>
                 </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-sm font-bold uppercase tracking-wider mb-3 opacity-70">Deskripsi Produk</p>
-                    <article className="prose prose-sm max-w-none text-base-content/70">
-                      <p>Cetak <strong>{foundItem.name}</strong> dengan spesifikasi khusus. Kami menggunakan bahan berkualitas tinggi yang diproses langsung dari gudang produksi kami.</p>
-                    </article>
+                <ProductAction 
+                  initialVariant={initialVariant} 
+                  itemName={foundItem.item_name}
+                  mappedFields={mappedFields}
+                />
+
+                <div className="divider"></div>
+
+                <div className="flex items-center justify-between lg:justify-end gap-4">
+                  <div className="lg:hidden text-right">
+                    <p className="text-[10px] font-bold uppercase opacity-40 leading-none mb-1">Total Estimasi</p>
+                    <p className="text-xl font-black text-primary italic">Rp {initialVariant?.pricing_rules[0]?.rate.toLocaleString("id-ID") || "0.000"}</p>
                   </div>
-
-                  <div className="mt-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-3">
-                      Daftar Harga Grosir
-                    </p>
-                    <div className="overflow-hidden border border-base-content/10 rounded-2xl">
-                      <table className="table table-zebra w-full bg-base-100">
-                        <thead className="bg-base-200/50 text-base-content/60">
-                          <tr className="border-b border-base-content/10">
-                            <th className="text-[10px] font-black uppercase py-3">Jumlah (Qty)</th>
-                            <th className="text-[10px] font-black uppercase py-3 text-right">Harga / Pcs</th>
-                          </tr>
-                        </thead>
-                        
-                        <tbody className="text-sm font-bold">
-                          {[
-                            { min: 1, max: 9, price: 19000 },
-                            { min: 10, max: 49, price: 17500 },
-                            { min: 50, max: 0, price: 15000 },
-                          ].map((rule, index) => (
-                            <tr key={index} className="border-b border-base-content/5 last:border-none">
-                              <td className="py-4">
-                                {rule.max === 0 ? `≥ ${rule.min} pcs` : `${rule.min} - ${rule.max} pcs`}
-                              </td>
-                              <td className="py-4 text-right text-primary font-black italic">
-                                Rp {rule.price.toLocaleString("id-ID")}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <p className="text-[9px] mt-2 opacity-40 italic font-medium">
-                      *Harga otomatis update berdasarkan pilihan bahan & ukuran.
-                    </p>
-                  </div>
-
-                  <div className="divider"></div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-3 opacity-40">Spesifikasi</p>
-                      <div className="bg-base-200/30 p-4 rounded-2xl border border-base-content/5">
-                        <FormPesan fields={mappedFields} />
-                      </div>
-                    </div>
-
-                    <div className="divider"></div>
-                    <div className="flex gap-3 justify-end">
-                      <Link
-                        href="/cart"
-                        className="btn btn-outline btn-primary uppercase font-bold"
-                      >
-                        Tambah Keranjang
-                      </Link>
-                    </div>
-                  </div>
+                  <Link
+                    href="/cart"
+                    className="btn btn-primary shadow-lg shadow-primary/20 uppercase font-bold rounded-2xl px-6"
+                  >
+                    Tambah Keranjang
+                  </Link>
                 </div>
               </div>
             </div>
 
-            <fieldset className="fieldset bg-base-100 border-base-content/5 rounded-3xl border p-8 shadow-md">
+            <fieldset className="fieldset bg-base-100 border-base-content/5 rounded-2xl border p-8 shadow-md">
               <legend className="fieldset-legend text-primary font-black uppercase tracking-widest px-4">
                 Informasi Harga Pengerjaan
               </legend>
@@ -137,8 +103,8 @@ export default async function Produk({ params }: PageProps) {
                 <table className="table table-zebra w-full bg-base-100">
                   <thead className="bg-base-200/50 text-base-content/60">
                     <tr className="border-b border-base-content/10">
-                      <th className="text-[10px] font-black uppercase py-3">Estimasi Pengerjaan</th>
-                      <th className="text-[10px] font-black uppercase py-3 text-right">Harga</th>
+                      <th className="text-md font-black uppercase">Estimasi Pengerjaan</th>
+                      <th className="text-md font-black uppercase text-right">Harga</th>
                     </tr>
                   </thead>
                   
@@ -149,10 +115,10 @@ export default async function Produk({ params }: PageProps) {
                       { estimasi: "3 hari", price: 15000 },
                     ].map((rule, index) => (
                       <tr key={index} className="border-b border-base-content/5 last:border-none">
-                        <td className="py-4">
+                        <td>
                           {rule.estimasi}
                         </td>
-                        <td className="py-4 text-right text-primary font-black italic">
+                        <td className="text-right text-primary font-black italic">
                           Rp {rule.price.toLocaleString("id-ID")}
                         </td>
                       </tr>
@@ -172,7 +138,9 @@ export default async function Produk({ params }: PageProps) {
 
           <div className="hidden lg:block">
             <div className="sticky top-18 space-y-4">              
-              <FileUpload />
+              <div className="-mt-3">
+                <FileUpload />
+              </div>
 
               <fieldset className="fieldset bg-base-100 border-base-content/5 rounded-2xl border p-8 shadow-md sticky">
                 <legend className="fieldset-legend text-primary font-black uppercase tracking-widest px-4">
@@ -182,7 +150,7 @@ export default async function Produk({ params }: PageProps) {
                 <div className="">
                   <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
                     <p className="text-[10px] font-bold uppercase text-primary mb-1">Total Estimasi</p>
-                    <p className="text-2xl font-black text-primary">Rp 0.000</p>
+                    <p className="text-2xl font-black text-primary">Rp {initialVariant?.pricing_rules[0]?.rate.toLocaleString("id-ID") || "0.000"}</p>
                   </div>
                   <Link href={"/cart"} className="btn btn-primary w-full rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20 mt-2">
                     Beli
@@ -190,7 +158,7 @@ export default async function Produk({ params }: PageProps) {
                 </div>
               </fieldset>
 
-              <div className="card bg-primary text-primary-content shadow-xl shadow-primary/20">
+              <div className="card bg-primary text-primary-content shadow-xl shadow-primary/20 rounded-2xl">
                 <div className="card-body p-6 gap-4">
                   <h3 className="font-bold flex items-center gap-2 underline underline-offset-4 uppercase text-sm">
                     <Award size={20}/> LAYANAN TERBAIK
@@ -204,7 +172,7 @@ export default async function Produk({ params }: PageProps) {
                 </div>
               </div>
 
-              <div className="card bg-base-100 border border-base-300 shadow-sm">
+              <div className="card bg-base-100 border border-base-300 shadow-sm rounded-2xl">
                 <div className="card-body p-6 text-center">
                   <p className="text-[10px] opacity-60 mb-2 uppercase font-bold tracking-widest">Butuh Bantuan?</p>
                   <button className="btn btn-outline btn-sm rounded-full btn-primary uppercase font-bold text-[10px]">Chat Admin</button>

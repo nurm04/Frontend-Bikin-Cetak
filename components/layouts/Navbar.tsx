@@ -1,13 +1,17 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Search, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Search, User, LogOut } from 'lucide-react';
 import SwapTheme from '../ui/SwapTheme';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { PRODUCT_CATEGORIES } from "@/lib/data";
+import { ItemData } from "@/services/itemService";
 import { slugify } from "@/lib/utils";
 
-const Navbar = () => {
+interface NavbarProps {
+  items: ItemData[];
+}
+
+const Navbar = ({ items = [] }: NavbarProps) => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const pathname = usePathname();
@@ -37,6 +41,14 @@ const Navbar = () => {
     setOpenMenu(openMenu === key ? null : key);
   };
 
+  const dynamicCategories = items
+  .filter((group) => group.item_group_name.toLowerCase() !== "services") // Saring di sini
+  .map((group) => ({
+    key: slugify(group.item_group_name),
+    label: group.item_group_name,
+    submenu: group.templates.map((t) => ({ name: t.item_name }))
+  }));
+
   return (
     <>
       <div className="navbar bg-base-100 shadow-sm px-4 md:px-12 lg:px-20 sticky top-0 z-10">
@@ -48,7 +60,7 @@ const Navbar = () => {
               </svg>
             </div>
             <ul tabIndex={-1} className="menu menu-sm md:menu-md dropdown-content bg-base-100 z-10 mt-3 w-screen p-2 shadow-xl -ms-4 md:-ms-12">
-              {PRODUCT_CATEGORIES.map((menu) => (
+              {dynamicCategories.map((menu) => (
                 <li key={menu.key}>
                   <details open={openMenu === menu.key}>
                     <summary onClick={(e) => { e.preventDefault(); toggleMenu(menu.key); }}>
@@ -79,7 +91,6 @@ const Navbar = () => {
         </div>
 
         <div className="navbar-end gap-3">
-          {/* LOGIC TOMBOL LOGIN / USER MENU */}
           {!isLoggedIn ? (
             <Link href="/login" className="btn btn-ghost hidden md:flex border-none hover:bg-primary/10 group">
               <User size={18} className="text-primary group-hover:scale-110 transition-transform" />
@@ -100,7 +111,7 @@ const Navbar = () => {
       {isHome && (
         <div className="navbar bg-base-100 hidden lg:flex justify-center border-t border-base-200 px-4 md:px-12 lg:px-20">
           <ul className="menu menu-horizontal p-0 scrollbar-hide">
-            {PRODUCT_CATEGORIES.map((menu) => (
+            {dynamicCategories.map((menu) => (
               <li key={menu.key} className="dropdown dropdown-hover dropdown-center">
                 <div role="button" className="text-[11px] font-semibold uppercase hover:text-primary transition-colors py-3 px-4">
                   {menu.label}

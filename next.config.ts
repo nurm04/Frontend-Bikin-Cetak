@@ -27,6 +27,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'continuing-tue-pen-held.trycloudflare.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

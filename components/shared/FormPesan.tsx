@@ -7,38 +7,47 @@ import FormTextarea from "@/components/ui/FormTextarea";
 interface FormField {
   name: string;
   label: string;
-  type: string;
   options?: string[];
 }
 
-export default function FormPesan({ fields }: { fields: FormField[] }) {
+interface FormPesanProps {
+  fields: FormField[];
+  values: Record<string, string>;
+  onValueChange: (name: string, value: string) => void;
+}
+
+export default function FormPesan({ fields, values, onValueChange }: FormPesanProps) {
   return (
     <div className="grid grid-cols-1">
       {fields.map((field, index) => (
         <div key={index}>
-          {field.type === "select" ? (
-            <FormSelect 
-              label={field.label} 
-              name={field.name} 
-              options={field.options || []} 
-            />
-          ) : (
-            <FormInput 
-              label={field.label} 
-              name={field.name} 
-              type={field.type} 
-              placeholder={`Pilih ${field.label}...`} 
-            />
-          )}
+          <FormSelect 
+            label={field.label} 
+            name={field.name} 
+            options={field.options || []}
+            value={values[field.name]}
+            onChange={onValueChange}
+          />
         </div>
       ))}
       
       <div className="">
+        <FormInput 
+          label="Jumlah" 
+          name="qty" 
+          type="number" 
+          min="1"
+          defaultValue="1"
+          placeholder="1"
+          onChange={onValueChange}
+        />
+
         <FormTextarea 
           label="Catatan Tambahan" 
           name="catatan" 
           placeholder="Contoh: Laminasi doff, potong pola, dll..." 
           className="bg-base-100"
+          onChange={onValueChange}
         />
       </div>
     </div>

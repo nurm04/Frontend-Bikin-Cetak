@@ -1,16 +1,27 @@
 "use client";
-import React from 'react';
 import Link from 'next/link';
 import { Mail, Phone, MapPin } from 'lucide-react';
-import { PRODUCT_CATEGORIES } from "@/lib/data";
+import { ItemData } from "@/services/itemService";
 import { slugify } from "@/lib/utils";
 
-const Footer = () => {
+interface FooterProps {
+  items: ItemData[];
+}
+
+const Footer = ({ items = [] }: FooterProps) => {
+  const dynamicCategories = items
+  .filter((group) => group.item_group_name.toLowerCase() !== "services") // Saring di sini
+  .map((group) => ({
+    key: slugify(group.item_group_name),
+    label: group.item_group_name,
+    submenu: group.templates.map((t) => ({ name: t.item_name }))
+  }));
+
   return (
     <footer className="bg-primary text-white">
       <div className="container mx-auto px-4 md:px-8 py-12">
         <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-8 border-b border-white/20 pb-12">
-          {PRODUCT_CATEGORIES.map((menu) => (
+          {dynamicCategories.map((menu) => (
             <nav key={menu.key} className="flex flex-col gap-2">
               <h6 className="footer-title opacity-100 font-bold text-white mb-2 border-b border-white/30 w-fit">
                 {menu.label}
