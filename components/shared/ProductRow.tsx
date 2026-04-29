@@ -28,6 +28,7 @@ const ProductRow = ({ title, data }: ProductRowProps) => {
             <figure className="relative h-28 md:h-44 w-full overflow-hidden bg-base-300">
               <Image
                 fill
+                unoptimized
                 alt={item.name}
                 src={item.image || "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"}
                 className="object-cover transition-transform duration-500 group-hover:scale-110"

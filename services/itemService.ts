@@ -1,3 +1,4 @@
+// @/services/itemService.ts
 "use server";
 
 export interface PricingRule {
@@ -47,20 +48,27 @@ const API_URL = "https://bikincetak-api.up.railway.app/v1/items";
 
 export async function getItems(): Promise<ItemData[]> {
   try {
+    console.log(`[getItems] Memulai fetch ke: ${API_URL}`);
     const response = await fetch(API_URL, {
       method: "GET",
       next: { revalidate: 60 }, 
     });
 
+    const textRes = await response.text();
+
     if (!response.ok) {
-      throw new Error("Gagal mengambil data dari API");
+      console.error(`[getItems] Error ${response.status} dari API:`, textRes);
+      return [];
     }
 
-    const result: ApiResponse = await response.json();
-    return result.data;
+    const result: ApiResponse = JSON.parse(textRes);
+    
+    console.log(`[getItems] ✅ SUKSES! Mengambil ${result.data?.length || 0} grup produk.`);
+
+    return result.data || [];
   } catch (error) {
     if (error instanceof Error) {
-        console.error("Error Item Service:", error.message);
+        console.error("[getItems] Catch Error:", error.message);
     }
     return [];
   }
@@ -69,12 +77,19 @@ export async function getItems(): Promise<ItemData[]> {
 export async function getVariantDetail(itemName: string, attributes: Record<string, string>): Promise<VariantDetail | null> {
   try {
     const url = `${API_URL}/${encodeURIComponent(itemName)}`;
-    console.log("Fetching URL:", url);
+    console.log("\n--------------------------------------------------");
+    console.log(`[getVariantDetail] Menembak URL: ${url}`);
+    console.log("[getVariantDetail] Atribut terpilih:", attributes);
 
     const response = await fetch(url, { method: "GET", cache: "no-store" });
-    if (!response.ok) return null;
+    const textRes = await response.text();
 
-    const result: ApiVariantResponse = await response.json();
+    if (!response.ok) {
+       console.error(`[getVariantDetail] Error ${response.status}:`, textRes);
+       return null;
+    }
+
+    const result: ApiVariantResponse = JSON.parse(textRes);
 
     const suffix = Object.values(attributes)
       .filter(val => val !== "") 
@@ -82,10 +97,23 @@ export async function getVariantDetail(itemName: string, attributes: Record<stri
       .join("-");
   
     const targetVariantName = suffix ? `${itemName}-${suffix}` : itemName;
+    console.log(`[getVariantDetail] Mencari target: "${targetVariantName}"`);
 
-    return result.data?.find(v => v.variant_name === targetVariantName) || null;
+    const found = result.data?.find(v => v.variant_name === targetVariantName) || null;
+    
+    if (found) {
+        console.log("[getVariantDetail] ✅ VARIANT DITEMUKAN:", found);
+    } else {
+        console.log("[getVariantDetail] ❌ VARIANT TIDAK DITEMUKAN! Target tidak cocok.");
+        console.log("[getVariantDetail] 💡 Berikut daftar semua Variant_Name dari API yang tersedia:");
+        const availableVariants = result.data?.map(v => v.variant_name);
+        console.log(availableVariants);
+    }
+    console.log("--------------------------------------------------\n");
+
+    return found;
   } catch (error: unknown) {
-    if (error instanceof Error) console.error("Error Fetch Variant:", error.message);
+    if (error instanceof Error) console.error("[getVariantDetail] Catch Error:", error.message);
     return null;
   }
 }

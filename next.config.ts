@@ -29,10 +29,16 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'univ-drinks-undertake-lil.trycloudflare.com',
+        hostname: 'meeting-assembled-watched-tribal.trycloudflare.com',
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'bikincetak-api.up.railway.app',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
 };

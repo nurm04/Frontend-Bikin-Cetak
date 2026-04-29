@@ -1,6 +1,6 @@
 // @/app/cart/page.tsx
 import { Metadata } from "next";
-import CartClient from "@/components/shared/CartClient";
+import CartClient from "@/app/(public)/cart/CartClient";
 
 export const metadata: Metadata = {
   title: "Keranjang Belanja | BikinCetak",

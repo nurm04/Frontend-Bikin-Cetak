@@ -2,7 +2,7 @@
 import { slugify } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { getItems, getVariantDetail } from "@/services/itemService";
-import ProductAction from "@/components/shared/ProductClientLayout";
+import ProductAction from "@/app/(public)/produk/[slug]/ProductClient";
 
 interface PageProps {
   params: Promise<{ slug: string }>;

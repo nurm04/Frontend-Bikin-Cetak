@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import RegisterForm from "@/components/shared/RegisterForm";
+import RegisterForm from "@/app/(auth)/register/RegisterForm";
 import Image from "next/image";
 
 export default function RegisterPage() {

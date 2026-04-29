@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Search, User, LogOut } from 'lucide-react';
+import { Search, User, LogOut, ShoppingBag } from 'lucide-react';
 import SwapTheme from '../ui/SwapTheme';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,6 +15,8 @@ interface NavbarProps {
 const Navbar = ({ items = [] }: NavbarProps) => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string>("Pelanggan");
+  
   const pathname = usePathname();
   const router = useRouter();  
 
@@ -22,8 +24,21 @@ const Navbar = ({ items = [] }: NavbarProps) => {
     const checkStatus = () => {
       if (typeof window !== "undefined") {
         const token = localStorage.getItem("token");
-        const status: boolean = token !== null && token !== "";
-        setIsLoggedIn(status);
+        if (token) {
+          setIsLoggedIn(true);
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            
+            const rawName = payload.name || payload.customer_id || "Pelanggan";
+            const cleanName = rawName.includes("_") ? rawName.split(" ").slice(1).join(" ") : rawName;
+            
+            setUserName(cleanName);
+          } catch (error) {
+            setUserName("Pelanggan");
+          }
+        } else {
+          setIsLoggedIn(false);
+        }
       }
     };
 
@@ -31,6 +46,10 @@ const Navbar = ({ items = [] }: NavbarProps) => {
   },[pathname]);
 
   const handleLogout = () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    
     localStorage.removeItem("token");
     setIsLoggedIn(false);
     router.push("/");
@@ -52,7 +71,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
 
   return (
     <>
-      <div className="navbar bg-base-100 shadow-sm px-4 md:px-12 lg:px-20 sticky top-0 z-10">
+      <div className="navbar bg-base-100 shadow-sm px-4 md:px-12 lg:px-20 sticky top-0 z-50">
         <div className="navbar-start">
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -96,7 +115,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
         </div>
 
         <div className="navbar-center hidden lg:flex">
-          <label className="input bg-primary/10 border border-transparent flex items-center gap-2 w-96 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary focus-within:outline-none">
+          <label className="input bg-primary/10 border border-transparent flex items-center gap-2 w-96 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary focus-within:outline-none rounded-2xl">
             <Search size={18} className="text-primary" />
             <input type="text" className="grow outline-none bg-transparent" placeholder="Cari brosur, banner..." />
           </label>
@@ -104,19 +123,66 @@ const Navbar = ({ items = [] }: NavbarProps) => {
 
         <div className="navbar-end gap-3">
           {!isLoggedIn ? (
-            <Link href="/login" className="btn btn-ghost hidden md:flex border-none hover:bg-primary/10 group">
-              <User size={18} className="text-primary group-hover:scale-110 transition-transform" />
-              <span className="font-bold text-xs uppercase tracking-widest">Sign In</span>
-            </Link>
+            <>
+              <Link href="/login" className="btn btn-ghost hidden md:flex border-none hover:bg-primary/10 group rounded-xl">
+                <User size={18} className="text-primary group-hover:scale-110 transition-transform" />
+                <span className="font-bold text-xs uppercase tracking-widest">Sign In</span>
+              </Link>
+              <SwapTheme />
+            </>
           ) : (
-            <div className="flex items-center gap-2">
-               <button onClick={handleLogout} className="btn btn-error btn-outline btn-sm gap-2 font-black text-[10px] uppercase">
-                 <LogOut size={16} />
-                 <span className="hidden sm:inline">Keluar</span>
-               </button>
+            <div className="dropdown dropdown-end">
+              <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar bg-primary/10 hover:bg-primary/20 transition-colors">
+                <div className="w-10 rounded-full flex items-center justify-center text-primary">
+                  <User size={20} />
+                </div>
+              </div>
+              
+              <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-2xl z-50 mt-4 w-56 p-2 shadow-xl border border-base-content/5">
+                
+                <li className="pointer-events-none mb-2">
+                  <div className="flex flex-col items-start px-3 py-2 bg-primary/5 rounded-xl">
+                    <span className="font-bold text-sm truncate text-primary w-full">{userName}</span>
+                  </div>
+                </li>
+                
+                <li>
+                  <Link href="/profile" className="py-2 font-bold flex items-center gap-3">
+                    <User size={16} className="opacity-70" />
+                    Profil Saya
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cart" className="py-2 font-bold flex items-center gap-3">
+                    <ShoppingBag size={16} className="opacity-70" />
+                    Keranjang
+                  </Link>
+                </li>
+                
+                <div className="divider my-0 opacity-30"></div>
+                
+                <li>
+                  <div className="py-1 flex justify-between items-center hover:bg-transparent cursor-default active:bg-transparent">
+                    <span className="font-bold text-xs opacity-70">Ganti Tema</span>
+                    <div className="-mr-2">
+                      <SwapTheme />
+                    </div>
+                  </div>
+                </li>
+                
+                <div className="divider my-0 opacity-30"></div>
+                
+                <li>
+                  <button 
+                    onClick={handleLogout} 
+                    className="py-2 text-error font-black flex items-center gap-3 hover:bg-error/10 hover:text-error focus:text-error"
+                  >
+                    <LogOut size={16} /> Keluar
+                  </button>
+                </li>
+              </ul>
             </div>
           )}
-          <SwapTheme />
         </div>
       </div>
 
@@ -128,7 +194,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
                 <div role="button" className="text-[11px] font-semibold uppercase hover:text-primary transition-colors py-3 px-4">
                   {menu.label}
                 </div>
-                <ul className="dropdown-content menu bg-base-100 rounded-box z-10 w-56 p-2 shadow-2xl border-t-4 border-primary mt-0">
+                <ul className="dropdown-content menu bg-base-100 rounded-box z-50 w-56 p-2 shadow-2xl border-t-4 border-primary mt-0">
                   {menu.submenu.map((item, i) => (
                     <li key={i}>
                       <Link href={`/produk/${slugify(item.name)}`}>{item.name}</Link>

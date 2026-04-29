@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { UserPlus, Mail, Lock, User, Phone } from "lucide-react";
 import AuthInput from "@/components/ui/AuthInput";
-import Alert from "../ui/Alert";
+import Alert from "../../../components/ui/Alert";
 import { useRouter } from "next/navigation";
 import { registerUser, RegisterPayload } from "@/services/authService";
 

@@ -17,6 +17,7 @@ const ProductCarousel = ({ image, name }: ProductCarouselProps) => {
               fill
               src={image}
               priority
+              unoptimized
               className="object-cover"
             />
           </div>

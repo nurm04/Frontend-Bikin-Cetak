@@ -1,4 +1,4 @@
-import HeroCarousel from "@/components/ui/HeroCarousel";
+import HeroCarousel from "@/components/shared/HeroCarousel";
 import ProductRow from "@/components/shared/ProductRow";
 import { getItems } from "@/services/itemService";
 

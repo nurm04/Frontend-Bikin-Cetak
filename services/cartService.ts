@@ -57,27 +57,43 @@ export async function getCartItems(token: string) {
 }
 
 export async function updateCartItemQty(id: number, qty: number, token: string) {
+  if (!id || id === 0) return { error: "ID pesanan tidak valid" };
+
   try {
-    const response = await fetch(`${BASE_URL}/cart/${id}`, {
+    const url = `${BASE_URL}/${id}`;
+    
+    const response = await fetch(url, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify({ qty }),
+      body: JSON.stringify({ qty: Number(qty) }),
     });
 
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text();
+      console.error("Respons bukan JSON:", text);
+      return { error: `Server error (${response.status}). Cek terminal.` };
+    }
+
     const data = await response.json();
-    if (!response.ok) return { error: data.message || "Gagal mengubah jumlah pesanan" };
-    return { success: true, data };
+
+    if (!response.ok) {
+      return { error: data.message || "Gagal update jumlah" };
+    }
+
+    return { success: true, data: data.data };
   } catch (error) {
-    return { error: "Gagal terhubung ke server." };
+    console.error("FETCH ERROR:", error);
+    return { error: "Koneksi ke API terputus atau timeout." };
   }
 }
 
 export async function deleteCartItem(id: number, token: string) {
   try {
-    const response = await fetch(`${BASE_URL}/cart/${id}`, {
+    const response = await fetch(`${BASE_URL}/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${token}`

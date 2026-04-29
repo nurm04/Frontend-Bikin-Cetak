@@ -7,9 +7,10 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCartItems, updateCartItemQty, deleteCartItem } from "@/services/cartService";
+import AlertPopup from "@/components/ui/AlertPopup";
 
 interface CartItemAPI {
-  id: number; // Pastikan id ditambahkan di interface
+  id: number;
   item_code: string;
   variant_name: string;
   qty: number;
@@ -22,9 +23,12 @@ export default function CartClient() {
   const [cartItems, setCartItems] = useState<CartItemAPI[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // State baru untuk melacak item mana yang sedang di-update/delete
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+
+  const [popup, setPopup] = useState<{
+    isOpen: boolean;
+    idToDelete: number | null;
+  }>({ isOpen: false, idToDelete: null });
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -56,42 +60,45 @@ export default function CartClient() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    setActionLoading(id); // Aktifkan efek loading untuk tombol ini
+    setActionLoading(id);
 
     const res = await updateCartItemQty(id, newQty, token);
     
     if (res.error) {
       alert(res.error);
     } else {
-      // Jika sukses di backend, update angka di layar (frontend)
       const newCart = cartItems.map(item => 
         item.id === id ? { ...item, qty: newQty } : item
       );
       setCartItems(newCart);
     }
     
-    setActionLoading(null); // Matikan efek loading
+    setActionLoading(null);
   };
 
-  const handleDeleteItem = async (id: number) => {
-    const confirmDelete = window.confirm("Hapus pesanan ini dari keranjang?");
-    if (!confirmDelete) return;
+  const triggerDelete = (id: number) => {
+    setPopup({ isOpen: true, idToDelete: id });
+  };
+
+  const confirmDelete = async () => {
+    const id = popup.idToDelete;
+    if (!id) return;
 
     const token = localStorage.getItem("token");
     if (!token) return;
 
     setActionLoading(id);
-
+    
     const res = await deleteCartItem(id, token);
 
     if (res.error) {
       alert(res.error);
     } else {
-      // Jika sukses dihapus di backend, hilangkan item dari layar
       const newCart = cartItems.filter(item => item.id !== id);
       setCartItems(newCart);
     }
 
+    setPopup({ isOpen: false, idToDelete: null });
     setActionLoading(null);
   };
 
@@ -104,7 +111,17 @@ export default function CartClient() {
   }
 
   return (
-    <main className="min-h-screen bg-base-200 py-6 px-4 md:px-8">
+    <main className="min-h-screen bg-base-200 py-6 px-4 md:px-8 relative">
+      
+      <AlertPopup 
+        isOpen={popup.isOpen}
+        title="Hapus Pesanan"
+        message="Apakah Anda yakin ingin menghapus pesanan ini dari keranjang belanja?"
+        isLoading={actionLoading === popup.idToDelete}
+        onConfirm={confirmDelete}
+        onCancel={() => setPopup({ isOpen: false, idToDelete: null })}
+      />
+
       <div className="max-w-7xl mx-auto">
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -141,7 +158,7 @@ export default function CartClient() {
               ) : (
                 <div className="divide-y divide-base-content/5">
                   {cartItems.map((item) => (
-                    <div key={item.id} className={`py-6 flex flex-col sm:flex-row gap-6 items-start transition-opacity ${actionLoading === item.id ? "opacity-50 pointer-events-none" : ""}`}>
+                    <div key={item.id} className={`py-6 flex flex-col sm:flex-row gap-6 items-start transition-opacity ${(actionLoading === item.id && !popup.isOpen) ? "opacity-50 pointer-events-none" : ""}`}>
                       <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-base-200 flex-shrink-0 border border-base-content/5">
                         <Image 
                           src={item.image_url || "/images/placeholder-product.jpg"} 
@@ -176,7 +193,7 @@ export default function CartClient() {
                           </button>
                           
                           <span className="px-3 text-xs font-black">
-                            {actionLoading === item.id ? <span className="loading loading-spinner loading-xs"></span> : item.qty}
+                            {actionLoading === item.id && !popup.isOpen ? <span className="loading loading-spinner loading-xs"></span> : item.qty}
                           </span>
                           
                           <button 
@@ -191,7 +208,7 @@ export default function CartClient() {
                         <div className="flex items-center gap-4">
                           <p className="font-black text-sm">Rp {(item.price * item.qty).toLocaleString("id-ID")}</p>
                           <button 
-                            onClick={() => handleDeleteItem(item.id)} 
+                            onClick={() => triggerDelete(item.id)}
                             disabled={actionLoading === item.id}
                             className="btn btn-ghost btn-xs text-error btn-square hover:bg-error/20"
                           >

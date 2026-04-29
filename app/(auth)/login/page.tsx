@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
-import LoginForm from "@/components/shared/LoginForm";
+import LoginForm from "@/app/(auth)/login/LoginForm";
 
 export default function LoginPage() {
   return (

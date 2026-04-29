@@ -2,14 +2,15 @@
 "use client";
 
 import { useState, ReactNode } from "react";
-import FormPesan from "./FormPesan";
+import FormPesan from "../../../../components/shared/FormPesan";
 import { VariantDetail, getVariantDetail, ItemTemplate } from "@/services/itemService"; 
 import { addToCart } from "@/services/cartService";
 import { useRouter } from "next/navigation";
-import ProductCarousel from "@/components/ui/ProductCarousel";
+import ProductCarousel from "@/components/shared/ProductCarousel";
 import ProductRow from "@/components/shared/ProductRow";
 import FileUpload from "@/components/ui/FileUpload";
-import { CheckCircle, Truck, ShieldCheck, Award } from "lucide-react";
+import { CheckCircle, Truck, ShieldCheck, Award, ShoppingBag } from "lucide-react";
+import AlertPopup from "@/components/ui/AlertPopup";
 
 interface FormField {
   name: string;
@@ -34,6 +35,13 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
   const [variant, setVariant] = useState<VariantDetail | null>(initialVariant);
   const [loading, setLoading] = useState<boolean>(false);
   const [cartLoading, setCartLoading] = useState<boolean>(false);
+
+  const [popup, setPopup] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "login" | "success" | "error" | null;
+  }>({ isOpen: false, title: "", message: "", type: null });
 
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = { qty: "1" };
@@ -72,8 +80,12 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
     if (!variant) return;
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Silakan login terlebih dahulu!");
-      router.push("/login");
+      setPopup({
+        isOpen: true,
+        title: "Perlu Login",
+        message: "Silakan login terlebih dahulu untuk memasukkan barang ke keranjang.",
+        type: "login"
+      });
       return;
     }
     setCartLoading(true);
@@ -89,15 +101,50 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
     setCartLoading(false);
     
     if (res.error) {
-      alert(res.error);
+      setPopup({
+        isOpen: true,
+        title: "Gagal Menambahkan",
+        message: res.error,
+        type: "error"
+      });
     } else {
-      alert(res.message);
+      setPopup({
+        isOpen: true,
+        title: "Berhasil!",
+        message: res.message || "Barang sukses ditambahkan ke keranjang belanja Anda.",
+        type: "success"
+      });
+    }
+  };
+
+  const handlePopupConfirm = () => {
+    const popupType = popup.type;
+    setPopup({ ...popup, isOpen: false });
+
+    if (popupType === "login") {
+      router.push("/login");
+    } else if (popupType === "success") {
       router.push("/cart");
     }
   };
 
   return (
-    <main className="min-h-screen bg-base-200 py-6 px-4 md:px-8">
+    <main className="min-h-screen bg-base-200 py-6 px-4 md:px-8 relative">
+
+      <AlertPopup 
+        isOpen={popup.isOpen}
+        title={popup.title}
+        message={popup.message}
+        onConfirm={handlePopupConfirm}
+        onCancel={() => setPopup({ ...popup, isOpen: false })}
+        cancelText="Tutup"
+        confirmText={
+          popup.type === "login" ? "Login Sekarang" : 
+          popup.type === "success" ? "Lihat Keranjang" : 
+          "Mengerti"
+        }
+      />
+
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
@@ -172,7 +219,14 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                     disabled={cartLoading || loading || !variant}
                     className="btn btn-primary shadow-lg shadow-primary/20 uppercase font-bold rounded-2xl px-6"
                   >
-                    {cartLoading ? <span className="loading loading-spinner"></span> : "Tambah Keranjang"}
+                    {cartLoading ? (
+                      <span className="loading loading-spinner"></span>
+                    ) : (
+                      <>
+                        <ShoppingBag size={18} />
+                        <span className="hidden md:inline">Tambah Keranjang</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -230,13 +284,6 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                     <p className="text-[10px] font-bold uppercase text-primary mb-1">Total Estimasi</p>
                     <p className="text-2xl font-black text-primary">Rp {totalPrice.toLocaleString("id-ID")}</p>
                   </div>
-                  <button 
-                    onClick={handleAddToCart}
-                    disabled={cartLoading || loading || !variant}
-                    className="btn btn-primary w-full rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20 mt-2"
-                  >
-                     {cartLoading ? <span className="loading loading-spinner"></span> : "Beli"}
-                  </button>
                 </div>
               </fieldset>
 
