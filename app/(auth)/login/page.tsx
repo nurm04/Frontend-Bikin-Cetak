@@ -33,7 +33,7 @@ export default function LoginPage() {
           <div className="divider my-8 text-[10px] font-black opacity-20 uppercase">Atau</div>
 
           <a 
-            href="https://bikincetak-api.up.railway.app/v1/auth/google/login"
+            href="https://bikincetak-api.up.railway.app/v1/auth/google/login?prompt=select_account"
             className="btn bg-white text-black rounded-2xl border-base-content/10 w-full hover:bg-base-200 gap-3 font-bold text-xs shadow-sm flex items-center justify-center"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">

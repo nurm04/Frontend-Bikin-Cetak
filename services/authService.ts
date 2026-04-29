@@ -1,6 +1,6 @@
 "use server";
 
-const BASE_URL = "https://bikincetak-api.up.railway.app/v1";
+const BASE_URL = "https://bikincetak-api.up.railway.app/v1/auth";
 
 // Interface untuk Register
 export interface RegisterPayload {
@@ -19,28 +19,44 @@ export interface AuthResponse {
     name: string;
     email: string;
   };
+  error?: string;
 }
 
-export async function registerUser(payload: RegisterPayload): Promise<AuthResponse> {
-  const response = await fetch(`${BASE_URL}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+export async function registerUser(payload: RegisterPayload) {
+  try {
+    const response = await fetch(`${BASE_URL}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-  const data: AuthResponse = await response.json();
-  if (!response.ok) throw new Error(data.message || "Gagal mendaftar");
-  return data;
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { error: data.message || "Gagal mendaftar. Silakan coba lagi." };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Gagal terhubung ke server percetakan." };
+  }
 }
 
-export async function loginUser(payload: Pick<RegisterPayload, 'email' | 'password'>): Promise<AuthResponse> {
-  const response = await fetch(`${BASE_URL}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+export async function loginUser(payload: Pick<RegisterPayload, 'email' | 'password'>) {
+  try {
+    const response = await fetch(`${BASE_URL}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-  const data: AuthResponse = await response.json();
-  if (!response.ok) throw new Error(data.message || "Email atau password salah");
-  return data;
+    const data = await response.json();
+    if (!response.ok) {
+      return { error: data.message || "Email atau password salah" };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Gagal terhubung ke server percetakan." };
+  }
 }

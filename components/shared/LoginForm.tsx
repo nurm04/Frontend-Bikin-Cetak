@@ -27,11 +27,20 @@ export default function LoginForm() {
 
     try {
       const res = await loginUser(payload);
-      if (res.token) localStorage.setItem("token", res.token);
-      router.push("/");
-      router.refresh();
+      
+      if (res.error) {
+        setError(res.error); 
+        setLoading(false);
+        return;
+      }
+
+      if (res.token) { 
+        localStorage.setItem("token", res.token);
+        router.push("/");
+        router.refresh();
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal Login");
+      setError("Terjadi kesalahan sistem yang tidak diketahui.");
     } finally {
       setLoading(false);
     }

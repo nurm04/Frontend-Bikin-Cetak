@@ -26,13 +26,23 @@ export default function RegisterForm() {
     };
 
     try {
-      await registerUser(payload);
+      const res = await registerUser(payload);
+      
+      if (res.error) {
+        setError({ msg: res.error, type: "error" });
+        setLoading(false);
+        return;
+      }
+
       setError({ msg: "Pendaftaran Berhasil! Mengalihkan...", type: "success" });
       setTimeout(() => router.push("/login"), 2000);
+      
     } catch (err) {
-      setError({ msg: err instanceof Error ? err.message : "Terjadi kesalahan", type: "error" });
+      setError({ msg: "Terjadi kesalahan sistem yang tidak diketahui.", type: "error" });
     } finally {
-      setLoading(false);
+      if (error?.type === "error") {
+          setLoading(false);
+      }
     }
   };
 
