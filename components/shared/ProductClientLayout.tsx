@@ -116,6 +116,12 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                 <div className="space-y-6">
                   <div className={`mt-4 transition-all ${loading ? "opacity-40" : "opacity-100"}`}>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-3">
+                      Deskripsi Produk
+                    </p>
+
+                    <p className="text-sm">Lorem ipsum dolor sit amet consectetur adipisicing elit. Veritatis quis alias doloremque, consectetur maxime blanditiis voluptatibus minus temporibus illum sequi.</p>
+
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-3">
                       Daftar Harga Grosir ({variant?.uom || 'Pcs'})
                     </p>
                     <div className="overflow-hidden border border-base-content/10 rounded-2xl">
