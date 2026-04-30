@@ -6,21 +6,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const slides = [
   {
     id: 1,
-    src: "https://img.daisyui.com/images/stock/photo-1625726411847-8cbb60cc71e6.webp",
-    title: "Cetak Brosur Kilat",
-    desc: "Diskon Hingga 50% Khusus Hari Ini",
+    src: "https://bikincetak.id/wp-content/uploads/2025/05/cetak-kalender-murah.jpg",
   },
   {
     id: 2,
-    src: "https://img.daisyui.com/images/stock/photo-1609621838510-5ad474b7d25d.webp",
-    title: "Kartu Nama Mewah",
-    desc: "Bikin Bisnis Kamu Terlihat Profesional",
+    src: "https://bikincetak.id/wp-content/uploads/2025/05/cetak-foto-murah.jpg",
   },
   {
     id: 3,
-    src: "https://img.daisyui.com/images/stock/photo-1414694762283-acccc27bca85.webp",
-    title: "Spanduk & Banner",
-    desc: "Cetak Cepat Harga Bersahabat",
+    src: "https://bikincetak.id/wp-content/uploads/2026/04/PRINT-A3-CETAK-ART-PAPER-CARTON-STIKER.jpg",
   },
 ];
 
@@ -41,8 +35,8 @@ export default function HeroCarousel() {
   }, [current]);
 
   return (
-    <div className="relative w-full px-4 md:px-10 lg:px-20 mb-10 group">
-      <div className="relative overflow-hidden rounded-3xl h-[200px] md:h-[400px] shadow-xl bg-base-300">
+    <div className="relative w-full px-4 md:px-10 lg:px-20 group">
+      <div className="relative overflow-hidden rounded-3xl h-[200px] md:h-[300px] shadow-xl bg-base-300">
         <div 
           className="flex transition-transform duration-700 ease-in-out h-full"
           style={{ transform: `translateX(-${current * 100}%)` }}
@@ -51,19 +45,11 @@ export default function HeroCarousel() {
             <div key={slide.id} className="min-w-full h-full relative">
               <Image
                 src={slide.src}
-                alt={slide.title}
+                alt={slide.src}
                 fill
                 priority={slide.id === 1}
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent flex flex-col justify-center p-8 md:p-20 text-white">
-                <h2 className="text-2xl md:text-5xl font-bold mb-2 drop-shadow-lg">
-                  {slide.title}
-                </h2>
-                <p className="text-sm md:text-xl opacity-90 drop-shadow-md max-w-md">
-                  {slide.desc}
-                </p>
-              </div>
             </div>
           ))}
         </div>

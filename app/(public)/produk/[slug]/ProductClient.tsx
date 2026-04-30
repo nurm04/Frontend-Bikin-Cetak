@@ -94,7 +94,8 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
       item_code: variant.item_code,
       variant_name: variant.variant_name,
       qty: currentQty,
-      price: currentPrice
+      price: currentPrice,
+      image_url: foundItem.image_url
     };
 
     const res = await addToCart(payload, token);
@@ -155,7 +156,7 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
 
               <div className="flex flex-col h-full">
                 <div className="mb-6">
-                  <h1 className="text-3xl font-bold mb-2 uppercase italic tracking-tighter">
+                  <h1 className="text-3xl font-bold mb-2 uppercase tracking-tighter">
                     {foundItem.item_name}
                   </h1>
                 </div>
@@ -166,7 +167,18 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                       Deskripsi Produk
                     </p>
 
-                    <p className="text-sm">Lorem ipsum dolor sit amet consectetur adipisicing elit. Veritatis quis alias doloremque, consectetur maxime blanditiis voluptatibus minus temporibus illum sequi.</p>
+                    <div className="bg-base-200/50 p-5 rounded-2xl border border-base-content/5 text-sm leading-relaxed text-base-content/80">
+                      {variant?.description ? (
+                        <div 
+                          className="prose prose-sm prose-p:my-1 prose-ul:my-1 max-w-none" 
+                          dangerouslySetInnerHTML={{ __html: variant.description }} 
+                        />
+                      ) : (
+                        <p className="italic opacity-70">
+                          Spesifikasi cetak {foundItem.item_name} dengan kualitas premium. Silakan pilih opsi spesifikasi di bawah untuk melihat harga detail.
+                        </p>
+                      )}
+                    </div>
 
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-3">
                       Daftar Harga Grosir ({variant?.uom || 'Pcs'})

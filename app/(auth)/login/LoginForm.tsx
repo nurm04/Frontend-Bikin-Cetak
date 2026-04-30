@@ -34,10 +34,13 @@ export default function LoginForm() {
         return;
       }
 
-      if (res.token) { 
-        localStorage.setItem("token", res.token);
-        router.push("/");
-        router.refresh();
+      const token = res.token || res.data?.token;
+
+      if (token) { 
+        localStorage.setItem("token", token);
+        window.location.href = "/"; 
+      } else {
+        setError("Token tidak ditemukan dari server.");
       }
     } catch (err) {
       setError("Terjadi kesalahan sistem yang tidak diketahui.");
