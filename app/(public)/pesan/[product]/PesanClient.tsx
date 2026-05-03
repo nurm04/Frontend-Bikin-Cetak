@@ -75,7 +75,7 @@ export default function PesanClient() {
     setLoading(true);
     
     const payload = { 
-      address_name: "Rumah Budi-Shipping", 
+      address_name: "Nurm house-Shipping", 
       items: items 
     };
 
