@@ -20,15 +20,21 @@ export interface OrderResponse {
 
 const API_URL = "https://bikincetak-api.up.railway.app/v1/order";
 
-export async function createOrder(data: OrderRequest): Promise<OrderResponse | null> {
+export async function createOrder(data: OrderRequest, token: string): Promise<OrderResponse | null> {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) throw new Error("Gagal membuat pesanan");
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.message || "Gagal membuat pesanan");
+    }
 
     return await response.json();
   } catch (error) {
