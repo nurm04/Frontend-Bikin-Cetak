@@ -2,9 +2,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, CreditCard } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getCartItems, updateCartItemQty, deleteCartItem } from "@/services/cartService";
 import AlertPopup from "@/components/ui/AlertPopup";
@@ -21,6 +21,7 @@ interface CartItemAPI {
 export default function CartClient() {
   const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItemAPI[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]); // State untuk Checkbox
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -30,29 +31,43 @@ export default function CartClient() {
     idToDelete: number | null;
   }>({ isOpen: false, idToDelete: null });
 
-  useEffect(() => {
-    const fetchCart = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Silakan login terlebih dahulu untuk melihat keranjang.");
-        router.push("/login");
-        return;
-      }
+  /* eslint-disable react-hooks/set-state-in-effect */
+  const fetchCart = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Silakan login terlebih dahulu untuk melihat keranjang.");
+      router.push("/login");
+      return;
+    }
 
-      const res = await getCartItems(token);
-      
-      if (res.error) {
-        setError(res.error);
-      } else {
-        setCartItems(res.data?.items || []); 
-      }
-      setLoading(false);
-    };
-
-    fetchCart();
+    const res = await getCartItems(token);
+    
+    if (res.error) {
+      setError(res.error);
+    } else {
+      setCartItems(res.data?.items || []); 
+    }
+    setLoading(false);
   }, [router]);
 
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.qty), 0);
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Logic Hitung Total yang Dicentang
+  const selectedSubtotal = cartItems
+    .filter(item => selectedIds.includes(item.id))
+    .reduce((total, item) => total + (item.price * item.qty), 0);
+
+  // Logic Toggle Checkbox
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds(selectedIds.length === cartItems.length ? [] : cartItems.map(i => i.id));
+  };
 
   const handleUpdateQty = async (id: number, newQty: number) => {
     if (newQty < 1) return;
@@ -96,10 +111,19 @@ export default function CartClient() {
     } else {
       const newCart = cartItems.filter(item => item.id !== id);
       setCartItems(newCart);
+      // Hapus ID dari selectedIds jika item dihapus
+      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
     }
 
     setPopup({ isOpen: false, idToDelete: null });
     setActionLoading(null);
+  };
+
+  // Logic Lanjut ke Pembayaran
+  const handleCheckout = () => {
+    const itemsToBuy = cartItems.filter(item => selectedIds.includes(item.id));
+    localStorage.setItem("checkout_items", JSON.stringify(itemsToBuy));
+    router.push("/pesan/checkout");
   };
 
   if (loading) {
@@ -140,13 +164,24 @@ export default function CartClient() {
           
           <div className="lg:col-span-8 space-y-4">
             <div className="bg-base-100 rounded-2xl p-6 shadow-sm border border-base-content/5">
-              <div className="flex items-center gap-3 mb-6">
-                <ShoppingBag className="text-primary" size={20} />
-                <h2 className="text-xl font-black uppercase tracking-tight">Pesanan Anda ({cartItems.length})</h2>
+              
+              <div className="flex items-center justify-between mb-6 border-b border-base-content/5 pb-4">
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox" 
+                    className="checkbox checkbox-primary checkbox-sm rounded-lg" 
+                    checked={selectedIds.length === cartItems.length && cartItems.length > 0}
+                    onChange={toggleSelectAll}
+                  />
+                  <h2 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                    <ShoppingBag className="text-primary" size={20} />
+                    Pesanan Anda ({cartItems.length})
+                  </h2>
+                </div>
               </div>
 
               {error && (
-                <div className="alert alert-error text-xs font-bold rounded-xl mb-4">
+                <div className="alert alert-error text-xs font-bold rounded-2xl mb-4">
                   {error}
                 </div>
               )}
@@ -158,7 +193,28 @@ export default function CartClient() {
               ) : (
                 <div className="divide-y divide-base-content/5">
                   {cartItems.map((item) => (
-                    <div key={item.id} className={`py-6 flex flex-col sm:flex-row gap-6 items-start transition-opacity ${(actionLoading === item.id && !popup.isOpen) ? "opacity-50 pointer-events-none" : ""}`}>
+                    <div key={item.id} className={`py-6 flex flex-col sm:flex-row gap-6 items-start transition-opacity ${(actionLoading === item.id && !popup.isOpen) ? "opacity-50 pointer-events-none" : (!selectedIds.includes(item.id) ? "opacity-60" : "opacity-100")}`}>
+                      
+                      {/* Checkbox per Item */}
+                      <div className="pt-8 hidden sm:block">
+                        <input 
+                          type="checkbox" 
+                          className="checkbox checkbox-primary checkbox-sm rounded-lg"
+                          checked={selectedIds.includes(item.id)}
+                          onChange={() => toggleSelect(item.id)}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-4 sm:hidden w-full border-b border-base-content/5 pb-4">
+                         <input 
+                          type="checkbox" 
+                          className="checkbox checkbox-primary checkbox-sm rounded-lg"
+                          checked={selectedIds.includes(item.id)}
+                          onChange={() => toggleSelect(item.id)}
+                        />
+                        <span className="text-xs font-bold uppercase opacity-60">Pilih Produk Ini</span>
+                      </div>
+
                       <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-base-200 flex-shrink-0 border border-base-content/5">
                         <Image 
                           src={item.image_url || "/images/placeholder-product.jpg"} 
@@ -206,7 +262,9 @@ export default function CartClient() {
                         </div>
                         
                         <div className="flex items-center gap-4">
-                          <p className="font-black text-sm">Rp {(item.price * item.qty).toLocaleString("id-ID")}</p>
+                          <p className={`font-black text-sm ${selectedIds.includes(item.id) ? "text-primary" : ""}`}>
+                            Rp {(item.price * item.qty).toLocaleString("id-ID")}
+                          </p>
                           <button 
                             onClick={() => triggerDelete(item.id)}
                             disabled={actionLoading === item.id}
@@ -225,32 +283,45 @@ export default function CartClient() {
 
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-4">
-              <div className="card bg-base-100 border border-base-content/10 shadow-xl rounded-2xl overflow-hidden">
+              <div className="card bg-base-100 border-2 border-base-content/10 shadow-2xl rounded-2xl overflow-hidden">
                 <div className="p-8">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] opacity-40 mb-6">Ringkasan Pesanan</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-8 flex items-center gap-2">
+                    <CreditCard size={14} /> Ringkasan Pesanan
+                  </h3>
                   
-                  <div className="space-y-3 mb-6">
-                    <div className="flex justify-between text-sm">
-                      <span className="opacity-60">Subtotal</span>
-                      <span className="font-bold">Rp {subtotal.toLocaleString("id-ID")}</span>
+                  <div className="space-y-4 mb-8">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[10px] font-bold uppercase opacity-60">Item Terpilih</span>
+                      <span className="text-xs font-black italic">{selectedIds.length} Produk</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="opacity-60">Biaya Admin</span>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[10px] font-bold uppercase opacity-60">Subtotal</span>
+                      <span className="font-bold">Rp {selectedSubtotal.toLocaleString("id-ID")}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[10px] font-bold uppercase opacity-60">Biaya Admin</span>
                       <span className="font-bold">Rp 0</span>
                     </div>
-                    <div className="divider"></div>
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-black uppercase tracking-widest">Total</span>
-                      <span className="text-2xl font-black text-primary leading-none">Rp {subtotal.toLocaleString("id-ID")}</span>
+                    <div className="divider opacity-10 my-0"></div>
+                    <div className="flex flex-col gap-1 pt-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Total Tagihan</span>
+                      <span className="text-3xl font-black text-primary italic tracking-tighter leading-none">
+                        Rp {selectedSubtotal.toLocaleString("id-ID")}
+                      </span>
                     </div>
                   </div>
 
                   <button 
-                    disabled={cartItems.length === 0}
-                    className="btn btn-primary btn-block rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/30 h-14"
+                    disabled={selectedIds.length === 0}
+                    onClick={handleCheckout}
+                    className="btn btn-primary btn-block rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-primary/20 h-16 text-xs"
                   >
                     Checkout Sekarang
                   </button>
+
+                  <p className="text-[8px] text-center mt-4 opacity-40 font-bold uppercase tracking-tighter">
+                    Harga sudah termasuk pajak & biaya layanan cetak.
+                  </p>
                 </div>
               </div>
             </div>

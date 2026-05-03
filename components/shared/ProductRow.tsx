@@ -30,7 +30,7 @@ const ProductRow = ({ title, data }: ProductRowProps) => {
                 fill
                 unoptimized
                 alt={item.name}
-                src={item.image || "https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"}
+                src={item.image || "/favicon.ico"}
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">

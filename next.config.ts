@@ -29,7 +29,19 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'area-survivor-subscriber-stops.trycloudflare.com/',
+        hostname: 'vocational-she-highlighted-bible.trycloudflare.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dallas-detail-cms-pursuant.trycloudflare.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gene-written-pty-neck.trycloudflare.com',
         port: '',
         pathname: '/**',
       },

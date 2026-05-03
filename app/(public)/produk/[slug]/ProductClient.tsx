@@ -244,7 +244,7 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
               </div>
             </div>
 
-            <fieldset className="fieldset bg-base-100 border-base-content/5 rounded-2xl border p-8 shadow-md">
+            {/* <fieldset className="fieldset bg-base-100 border-base-content/5 rounded-2xl border p-8 shadow-md">
               <legend className="fieldset-legend text-primary font-black uppercase tracking-widest px-4">
                 Informasi Harga Pengerjaan
               </legend>
@@ -273,7 +273,7 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                   </tbody>
                 </table>
               </div>
-            </fieldset>
+            </fieldset> */}
 
             <div className="bg-base-100 px-8 py-4 rounded-2xl shadow-sm border border-base-content/5">
               <ProductRow title="Produk Lainnya" data={recommendations} />
