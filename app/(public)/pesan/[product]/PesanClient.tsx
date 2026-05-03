@@ -37,13 +37,14 @@ export default function PesanClient() {
       const parsedItems: CartStorageItem[] = JSON.parse(savedData);
       setItems(parsedItems.map(item => ({
         item_code: item.item_code,
-        item_name: item.variant_name,
-        qty: item.qty,
-        rate: item.price
+        item_name: item.variant_name || "Produk Bikin Cetak",
+        qty: Number(item.qty),
+        rate: Number(item.price)
       })));
     } catch (e) { router.push("/cart"); }
     finally { setIsMounting(false); }
   }, [router]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     loadCheckoutData();
@@ -70,8 +71,17 @@ export default function PesanClient() {
       router.push("/login");
       return;
     }
+
     setLoading(true);
-    const result = await createOrder({ address_name: "Rumah Budi-Shipping", items }, token); 
+    
+    const payload = { 
+      address_name: "Rumah Budi-Shipping", 
+      items: items 
+    };
+
+    console.log("PAYLOAD GOLANG:", JSON.stringify(payload, null, 2));
+
+    const result = await createOrder(payload, token); 
 
     if (result?.snap_token) {
       window.snap.pay(result.snap_token, {
@@ -82,7 +92,7 @@ export default function PesanClient() {
         onError: () => { alert("Pembayaran Gagal!"); }
       });
     } else {
-      alert("Gagal membuat pesanan. Silakan coba lagi.");
+      alert("Gagal membuat pesanan. Cek log console!");
     }
     
     setLoading(false);

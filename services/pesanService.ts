@@ -31,12 +31,14 @@ export async function createOrder(data: OrderRequest, token: string): Promise<Or
       body: JSON.stringify(data),
     });
 
+    const responseData = await response.json();
+
     if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData.message || "Gagal membuat pesanan");
+      console.error("ALASAN DITOLAK GOLANG:", responseData);
+      throw new Error(responseData.error || responseData.message || "Gagal membuat pesanan");
     }
 
-    return await response.json();
+    return responseData;
   } catch (error) {
     if (error instanceof Error) console.error("Order Service Error:", error.message);
     return null;
