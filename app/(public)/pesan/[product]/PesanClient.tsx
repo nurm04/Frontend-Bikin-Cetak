@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -28,7 +29,6 @@ export default function PesanClient() {
   const [loading, setLoading] = useState<boolean>(false);
   const [isMounting, setIsMounting] = useState<boolean>(true);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   const loadCheckoutData = useCallback(() => {
     const savedData = localStorage.getItem("checkout_items");
     if (!savedData) return router.push("/cart");
@@ -44,7 +44,6 @@ export default function PesanClient() {
     } catch (e) { router.push("/cart"); }
     finally { setIsMounting(false); }
   }, [router]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     loadCheckoutData();
@@ -60,7 +59,6 @@ export default function PesanClient() {
       if (existingScript) document.body.removeChild(existingScript); 
     };
   }, [loadCheckoutData]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
@@ -135,7 +133,7 @@ export default function PesanClient() {
               
               <div className="bg-base-200/50 p-6 rounded-2xl border border-dashed border-base-300 flex justify-between items-center">
                 <div>
-                  <p className="font-black text-sm uppercase italic tracking-tighter">Rumah Budi</p>
+                  <p className="font-black text-sm uppercase tracking-tighter">Rumah Budi</p>
                   <p className="text-xs font-bold opacity-60 mt-1">Gresik, Jawa Timur - 61121</p>
                 </div>
                 <button className="btn btn-ghost btn-xs uppercase font-bold text-[10px] opacity-50">Ubah</button>
@@ -152,7 +150,7 @@ export default function PesanClient() {
                 {items.map((item, idx) => (
                   <div key={idx} className="py-6 flex flex-col sm:flex-row gap-6 items-start">
                     
-                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-base-200 flex-shrink-0 border border-base-content/5">
+                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-base-200 border border-base-content/5">
                       <Image 
                         src="/favicon.ico" 
                         alt="icon" 
@@ -194,7 +192,7 @@ export default function PesanClient() {
 
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-4">
-              <div className="card bg-base-100 border-2 border-base-content/10 shadow-2xl rounded-2xl overflow-hidden">
+              <div className="card bg-base-100 border-2 border-base-content/10 rounded-2xl overflow-hidden">
                 <div className="p-8">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-8 flex items-center gap-2">
                     <CreditCard size={14} /> Detail Pembayaran
@@ -212,7 +210,7 @@ export default function PesanClient() {
                     <div className="divider opacity-10 my-0"></div>
                     <div className="flex flex-col gap-1 pt-2">
                       <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Total Tagihan</span>
-                      <span className="text-3xl font-black text-primary italic tracking-tighter leading-none">
+                      <span className="text-3xl font-black text-primary tracking-tighter leading-none">
                         Rp {subtotal.toLocaleString("id-ID")}
                       </span>
                     </div>

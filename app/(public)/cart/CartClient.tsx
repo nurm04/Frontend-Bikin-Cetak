@@ -215,7 +215,7 @@ export default function CartClient() {
                         <span className="text-xs font-bold uppercase opacity-60">Pilih Produk Ini</span>
                       </div>
 
-                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-base-200 flex-shrink-0 border border-base-content/5">
+                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-base-200 border border-base-content/5">
                         <Image 
                           src={item.image_url || "/images/placeholder-product.jpg"} 
                           alt={item.variant_name} 
@@ -283,7 +283,7 @@ export default function CartClient() {
 
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-4">
-              <div className="card bg-base-100 border-2 border-base-content/10 shadow-2xl rounded-2xl overflow-hidden">
+              <div className="card bg-base-100 border-2 border-base-content/10 rounded-2xl overflow-hidden">
                 <div className="p-8">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-8 flex items-center gap-2">
                     <CreditCard size={14} /> Ringkasan Pesanan
@@ -292,7 +292,7 @@ export default function CartClient() {
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-[10px] font-bold uppercase opacity-60">Item Terpilih</span>
-                      <span className="text-xs font-black italic">{selectedIds.length} Produk</span>
+                      <span className="text-xs font-black">{selectedIds.length} Produk</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-[10px] font-bold uppercase opacity-60">Subtotal</span>
@@ -305,7 +305,7 @@ export default function CartClient() {
                     <div className="divider opacity-10 my-0"></div>
                     <div className="flex flex-col gap-1 pt-2">
                       <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Total Tagihan</span>
-                      <span className="text-3xl font-black text-primary italic tracking-tighter leading-none">
+                      <span className="text-3xl font-black text-primary tracking-tighter leading-none">
                         Rp {selectedSubtotal.toLocaleString("id-ID")}
                       </span>
                     </div>

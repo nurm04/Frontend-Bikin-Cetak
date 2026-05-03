@@ -174,7 +174,7 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                           dangerouslySetInnerHTML={{ __html: variant.description }} 
                         />
                       ) : (
-                        <p className="italic opacity-70">
+                        <p className="opacity-70">
                           Spesifikasi cetak {foundItem.item_name} dengan kualitas premium. Silakan pilih opsi spesifikasi di bawah untuk melihat harga detail.
                         </p>
                       )}
@@ -195,7 +195,7 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                           {variant?.pricing_rules.map((rule, index) => (
                             <tr key={index}>
                               <td>{rule.max_qty === 0 ? `≥ ${rule.min_qty}` : `${rule.min_qty} - ${rule.max_qty}`}</td>
-                              <td className="text-right text-primary font-black italic">
+                              <td className="text-right text-primary font-black">
                                 Rp {rule.rate.toLocaleString("id-ID")}
                               </td>
                             </tr>
@@ -224,7 +224,7 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                 <div className="flex items-center justify-between lg:justify-end gap-4">
                   <div className="lg:hidden text-right">
                     <p className="text-[10px] font-bold uppercase opacity-40 leading-none mb-1">Total Estimasi</p>
-                    <p className="text-xl font-black text-primary italic">Rp {totalPrice.toLocaleString("id-ID")}</p>
+                    <p className="text-xl font-black text-primary">Rp {totalPrice.toLocaleString("id-ID")}</p>
                   </div>
                   <button
                     onClick={handleAddToCart}
@@ -265,7 +265,7 @@ export default function ProductClientLayout({ foundItem, initialVariant, mappedF
                     ].map((rule, index) => (
                       <tr key={index} className="border-b border-base-content/5 last:border-none">
                         <td>{rule.estimasi}</td>
-                        <td className="text-right text-primary font-black italic">
+                        <td className="text-right text-primary font-black">
                           Rp {rule.price.toLocaleString("id-ID")}
                         </td>
                       </tr>
