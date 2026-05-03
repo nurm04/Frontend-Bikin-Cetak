@@ -63,14 +63,28 @@ export default function PesanClient() {
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
+    
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Sesi login Anda sudah habis. Silakan login kembali.");
+      router.push("/login");
+      return;
+    }
     setLoading(true);
-    const result = await createOrder({ address_name: "Rumah Budi-Shipping", items });
+    const result = await createOrder({ address_name: "Rumah Budi-Shipping", items }, token); 
+
     if (result?.snap_token) {
       window.snap.pay(result.snap_token, {
-        onSuccess: () => { localStorage.removeItem("checkout_items"); router.push("/orders"); },
+        onSuccess: () => { 
+          localStorage.removeItem("checkout_items"); 
+          router.push("/orders"); 
+        },
         onError: () => { alert("Pembayaran Gagal!"); }
       });
+    } else {
+      alert("Gagal membuat pesanan. Silakan coba lagi.");
     }
+    
     setLoading(false);
   };
 
