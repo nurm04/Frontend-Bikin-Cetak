@@ -17,6 +17,19 @@ interface CartStorageItem {
   image_url?: string;
 }
 
+interface MidtransResult {
+  status_code: string;
+  status_message: string;
+  transaction_id: string;
+  order_id: string;
+  gross_amount: string;
+  payment_type: string;
+  transaction_time: string;
+  transaction_status: string;
+  pdf_url?: string;
+  finish_redirect_url?: string;
+}
+
 declare global {
   interface Window {
     snap: { pay: (token: string, options: object) => void; };
@@ -83,9 +96,11 @@ export default function PesanClient() {
 
     if (result?.snap_token) {
       window.snap.pay(result.snap_token, {
-        onSuccess: () => { 
+        onSuccess: (result: MidtransResult) => { 
           localStorage.removeItem("checkout_items"); 
-          router.push("/orders"); 
+          // Pastikan mengambil order_id yang valid dari respons Midtrans
+          const orderId = result.order_id; 
+          router.push(`/pesan/status/${orderId}`); 
         },
         onError: () => { alert("Pembayaran Gagal!"); }
       });
