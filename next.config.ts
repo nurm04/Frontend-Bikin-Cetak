@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'gene-written-pty-neck.trycloudflare.com',
+        hostname: 'supplemental-serving-ago-tablets.trycloudflare.com',
         port: '',
         pathname: '/**',
       },
