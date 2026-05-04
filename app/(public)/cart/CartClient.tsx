@@ -21,15 +21,25 @@ interface CartItemAPI {
 export default function CartClient() {
   const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItemAPI[]>([]);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]); // State untuk Checkbox
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   const [popup, setPopup] = useState<{
     isOpen: boolean;
+    type: "success" | "error" | "warning" | "info";
+    title: string;
+    message: string;
     idToDelete: number | null;
-  }>({ isOpen: false, idToDelete: null });
+    autoClose?: number;
+  }>({ 
+    isOpen: false, 
+    type: "warning", 
+    title: "", 
+    message: "", 
+    idToDelete: null 
+  });
 
   /* eslint-disable react-hooks/set-state-in-effect */
   const fetchCart = useCallback(async () => {
@@ -55,12 +65,10 @@ export default function CartClient() {
   }, [fetchCart]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Logic Hitung Total yang Dicentang
   const selectedSubtotal = cartItems
     .filter(item => selectedIds.includes(item.id))
     .reduce((total, item) => total + (item.price * item.qty), 0);
 
-  // Logic Toggle Checkbox
   const toggleSelect = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
@@ -92,7 +100,13 @@ export default function CartClient() {
   };
 
   const triggerDelete = (id: number) => {
-    setPopup({ isOpen: true, idToDelete: id });
+    setPopup({ 
+      isOpen: true, 
+      type: "warning",
+      title: "Hapus Pesanan?", 
+      message: "Pesanan ini akan dihapus permanen dari keranjang belanja Anda.",
+      idToDelete: id 
+    });
   };
 
   const confirmDelete = async () => {
@@ -107,19 +121,31 @@ export default function CartClient() {
     const res = await deleteCartItem(id, token);
 
     if (res.error) {
-      alert(res.error);
+      setPopup({
+        isOpen: true,
+        type: "error",
+        title: "Gagal Menghapus",
+        message: res.error,
+        idToDelete: null
+      });
     } else {
       const newCart = cartItems.filter(item => item.id !== id);
       setCartItems(newCart);
-      // Hapus ID dari selectedIds jika item dihapus
       setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+
+      setPopup({
+        isOpen: true,
+        type: "success",
+        title: "Berhasil Dihapus",
+        message: "Item telah dikeluarkan dari keranjang.",
+        idToDelete: null,
+        autoClose: 2000
+      });
     }
 
-    setPopup({ isOpen: false, idToDelete: null });
     setActionLoading(null);
   };
 
-  // Logic Lanjut ke Pembayaran
   const handleCheckout = () => {
     const itemsToBuy = cartItems.filter(item => selectedIds.includes(item.id));
     localStorage.setItem("checkout_items", JSON.stringify(itemsToBuy));
@@ -139,11 +165,15 @@ export default function CartClient() {
       
       <AlertPopup 
         isOpen={popup.isOpen}
-        title="Hapus Pesanan"
-        message="Apakah Anda yakin ingin menghapus pesanan ini dari keranjang belanja?"
-        isLoading={actionLoading === popup.idToDelete}
-        onConfirm={confirmDelete}
-        onCancel={() => setPopup({ isOpen: false, idToDelete: null })}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isLoading={actionLoading === popup.idToDelete && actionLoading !== null}
+        autoClose={popup.autoClose}
+        onCancel={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={popup.type === "warning" ? confirmDelete : undefined}
+        confirmText="Ya, Hapus"
+        cancelText={popup.type === "success" ? "Oke" : "Batal"}
       />
 
       <div className="max-w-7xl mx-auto">

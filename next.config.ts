@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'dallas-detail-cms-pursuant.trycloudflare.com',
+        hostname: 'removal-coverage-fig-rochester.trycloudflare.com',
         port: '',
         pathname: '/**',
       },

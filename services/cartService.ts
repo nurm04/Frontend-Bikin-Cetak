@@ -8,6 +8,7 @@ export interface CartPayload {
   variant_name: string;
   qty: number;
   price: number;
+  image_url: string;
 }
 
 export async function addToCart(payload: CartPayload, token: string) {
