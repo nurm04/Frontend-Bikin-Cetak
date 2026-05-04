@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'dallas-detail-cms-pursuant.trycloudflare.com',
+        hostname: 'reduce-participate-hourly-interval.trycloudflare.com',
         port: '',
         pathname: '/**',
       },
