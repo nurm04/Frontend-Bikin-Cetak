@@ -1,8 +1,8 @@
 // @/app/(public)/produk/[slug]/page.tsx
 import { slugify } from "@/lib/utils";
 import { notFound } from "next/navigation";
-import { getItems, getVariantDetail } from "@/services/itemService";
-import ProductAction from "@/app/(public)/produk/[slug]/ProductClient";
+import { getItems, ApiVariantResponse } from "@/services/itemService";
+import ProductClientLayout from "./ProductClient"; // Pastikan path import bener
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -11,50 +11,75 @@ interface PageProps {
 export default async function Produk({ params }: PageProps) {
   const { slug } = await params;
   const itemGroups = await getItems();
-  
-  const currentGroup = itemGroups.find((group) => 
-    group.templates.some((t) => slugify(t.item_name) === slug)
-  );
-  
-  if (!currentGroup) return notFound();
-  
-  const foundItem = currentGroup.templates.find(
-    (t) => slugify(t.item_name) === slug
-  );
-  
-  if (!foundItem) return notFound();
 
-  const mappedFields = foundItem.attributes.map((attr) => ({
-    name: attr.attribute,
-    label: attr.attribute,
-    type: "select",
-    options: attr.attribute_values.map((v) => v.attribute_value),
-  }));
+  // Debugging: Cek apakah data dari API beneran masuk
+  if (!itemGroups || itemGroups.length === 0) {
+    console.error("[Page] itemGroups kosong atau fetch gagal");
+    return notFound();
+  }
 
-  const initialAttributes: Record<string, string> = {};
-  mappedFields.forEach(field => {
-    if (field.options && field.options.length > 0) {
-      initialAttributes[field.name] = field.options[0]; 
+  // 1. Cari Item Template dengan logic yang lebih aman (trim & lowercase)
+  let foundItem = null;
+  let currentGroup = null;
+
+  for (const group of itemGroups) {
+    const match = group.templates.find(
+      (t) => slugify(t.item_name.trim()) === slug.trim()
+    );
+    if (match) {
+      foundItem = match;
+      currentGroup = group;
+      break;
     }
-  });
+  }
 
-  const initialVariant = await getVariantDetail(foundItem.item_name, initialAttributes);
+  // Jika tetap tidak ketemu, coba cari berdasarkan template name (PRD-xxx)
+  if (!foundItem) {
+    foundItem = itemGroups
+      .flatMap((g) => g.templates)
+      .find((t) => t.name === slug);
+  }
 
-  const products = currentGroup.templates;
-  const recommendations = products
-    .filter((item) => item.item_name !== foundItem.item_name)
-    .slice(0, 4)
-    .map((item) => ({
-      name: item.item_name,
-      image: item.image_url || "/images/placeholder-product.jpg"
-    }));
+  if (!foundItem || !currentGroup) {
+    console.warn(`[Page] Produk dengan slug "${slug}" beneran gak ada.`);
+    return notFound();
+  }
 
-  return (
-    <ProductAction 
-      foundItem={foundItem}
-      initialVariant={initialVariant}
-      mappedFields={mappedFields}
-      recommendations={recommendations}
-    />
-  );
+  // 2. Ambil semua list variant mentah dari API Railway
+  const variantUrl = `https://bikincetak-api.up.railway.app/v1/items/${encodeURIComponent(foundItem.item_name.trim())}`;
+  
+  try {
+    const variantRes = await fetch(variantUrl, { cache: "no-store" });
+    
+    if (!variantRes.ok) {
+       throw new Error(`API Railway error: ${variantRes.status}`);
+    }
+
+    const variantData: ApiVariantResponse = await variantRes.json();
+    const allVariants = variantData.data || [];
+
+    // 3. Set variant pertama sebagai initial
+    const initialVariant = allVariants.length > 0 ? allVariants[0] : null;
+
+    // 4. Rekomendasi
+    const recommendations = currentGroup.templates
+      .filter((item) => item.item_name !== foundItem?.item_name)
+      .slice(0, 4)
+      .map((item) => ({
+        name: item.item_name,
+        image: item.image_url || "/images/placeholder-product.jpg"
+      }));
+
+    return (
+      <ProductClientLayout 
+        foundItem={foundItem}
+        allVariants={allVariants}
+        initialVariant={initialVariant}
+        recommendations={recommendations}
+      />
+    );
+  } catch (error) {
+    console.error("[Page] Gagal fetch variant:", error);
+    return notFound(); // Atau tampilkan error page khusus
+  }
 }

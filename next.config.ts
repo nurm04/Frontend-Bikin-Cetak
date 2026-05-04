@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'vocational-she-highlighted-bible.trycloudflare.com',
+        hostname: 'dallas-detail-cms-pursuant.trycloudflare.com',
         port: '',
         pathname: '/**',
       },

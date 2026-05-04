@@ -13,9 +13,8 @@ export function parseVariantsToFields(variants: VariantDetail[], itemName: strin
   const attributeMap: Record<number, Set<string>> = {};
 
   variants.forEach((v) => {
-    // Bersihkan nama produk dari variant_name untuk dapet sisa atributnya
-    // Misal: "Kalender Meja-Doff-A5" -> ["Doff", "A5"]
-    const parts = v.variant_name.replace(`${itemName}-`, "").split("-");
+    const cleanName = v.variant_name.replace(`${itemName}-`, "");
+    const parts = cleanName.split("-");
     
     parts.forEach((part, index) => {
       if (!attributeMap[index]) attributeMap[index] = new Set();
