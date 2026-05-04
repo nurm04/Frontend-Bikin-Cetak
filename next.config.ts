@@ -29,19 +29,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'reduce-participate-hourly-interval.trycloudflare.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'removal-coverage-fig-rochester.trycloudflare.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'supplemental-serving-ago-tablets.trycloudflare.com',
+        hostname: 'sail-sponsor-dow-reactions.trycloudflare.com',
         port: '',
         pathname: '/**',
       },

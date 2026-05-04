@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useState, useEffect } from 'react';
 import { Search, User, LogOut, ShoppingBag } from 'lucide-react';
@@ -15,7 +16,7 @@ interface NavbarProps {
 const Navbar = ({ items = [] }: NavbarProps) => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [userName, setUserName] = useState<string>("Pelanggan");
+  const [emailUser, setEmailUser] = useState<string>("Pelanggan");
   
   const pathname = usePathname();
   const router = useRouter();  
@@ -29,12 +30,14 @@ const Navbar = ({ items = [] }: NavbarProps) => {
           try {
             const payload = JSON.parse(atob(token.split('.')[1]));
             
-            const rawName = payload.name || payload.customer_id || "Pelanggan";
+            console.log("ISI TOKEN GUE:", payload);
+            
+            const rawName = payload.email || "Pelanggan"; 
             const cleanName = rawName.includes("_") ? rawName.split(" ").slice(1).join(" ") : rawName;
             
-            setUserName(cleanName);
+            setEmailUser(cleanName);
           } catch (error) {
-            setUserName("Pelanggan");
+            setEmailUser("Pelanggan");
           }
         } else {
           setIsLoggedIn(false);
@@ -43,7 +46,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
     };
 
     checkStatus();
-  },[pathname]);
+  }, [pathname]);
 
   const handleLogout = () => {
     if (document.activeElement instanceof HTMLElement) {
@@ -115,10 +118,10 @@ const Navbar = ({ items = [] }: NavbarProps) => {
         </div>
 
         <div className="navbar-center hidden lg:flex">
-          <label className="input bg-primary/10 border border-transparent flex items-center gap-2 w-96 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary focus-within:outline-none rounded-2xl">
+          {/* <label className="input bg-primary/10 border border-transparent flex items-center gap-2 w-96 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary focus-within:outline-none rounded-2xl">
             <Search size={18} className="text-primary" />
             <input type="text" className="grow outline-none bg-transparent" placeholder="Cari brosur, banner..." />
-          </label>
+          </label> */}
         </div>
 
         <div className="navbar-end gap-3">
@@ -140,9 +143,11 @@ const Navbar = ({ items = [] }: NavbarProps) => {
               
               <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-2xl z-50 mt-4 w-56 p-2 shadow-xl border border-base-content/5">
                 
-                <li className="pointer-events-none mb-2">
-                  <div className="flex flex-col items-start px-3 py-2 bg-primary/5 rounded-xl">
-                    <span className="font-bold text-sm truncate text-primary w-full">{userName}</span>
+                <li className="pointer-events-none mb-2 w-full max-w-full overflow-hidden">
+                  <div className="block px-3 py-2 bg-primary/5 rounded-xl w-full max-w-full overflow-hidden box-border">
+                    <span className="font-bold text-sm truncate text-primary block w-full">
+                      {emailUser}
+                    </span>
                   </div>
                 </li>
                 

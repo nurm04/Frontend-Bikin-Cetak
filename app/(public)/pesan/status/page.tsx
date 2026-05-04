@@ -88,11 +88,11 @@ export default function OrderStatusPage({ params }: StatusPageProps) {
             {/* Stepper Progres Dinamis */}
             <div className="relative flex justify-between items-start w-full">
               {/* Line Background */}
-              <div className="absolute top-5 left-0 w-full h-1 bg-base-200 -z-0"></div>
+              <div className="absolute top-5 left-0 w-full h-1 bg-base-200 z-0"></div>
               
               {/* Line Active (Progress Fill) */}
               <div 
-                className="absolute top-5 left-0 h-1 bg-primary transition-all duration-1000 ease-in-out -z-0" 
+                className="absolute top-5 left-0 h-1 bg-primary transition-all duration-1000 ease-in-out z-0" 
                 style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
               ></div>
 
@@ -123,7 +123,7 @@ export default function OrderStatusPage({ params }: StatusPageProps) {
 
         {/* Ringkasan Informasi */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-base-100 rounded-[2rem] p-7 border border-base-content/5 shadow-sm">
+          <div className="bg-base-100 rounded-2xl p-7 border border-base-content/5 shadow-sm">
             <div className="flex items-center gap-3 mb-5 opacity-40">
               <Clock size={16} />
               <span className="text-[10px] font-black uppercase tracking-widest">Waktu Pemesanan</span>
@@ -131,7 +131,7 @@ export default function OrderStatusPage({ params }: StatusPageProps) {
             <p className="font-bold text-sm tracking-tight">{orderData.date}</p>
           </div>
 
-          <div className="bg-base-100 rounded-[2rem] p-7 border border-base-content/5 shadow-sm">
+          <div className="bg-base-100 rounded-2xl p-7 border border-base-content/5 shadow-sm">
             <div className="flex items-center gap-3 mb-5 opacity-40">
               <CreditCard size={16} />
               <span className="text-[10px] font-black uppercase tracking-widest">Total Pembayaran</span>
