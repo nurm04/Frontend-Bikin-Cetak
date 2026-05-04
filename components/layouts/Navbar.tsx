@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useState, useEffect } from 'react';
-import { Search, User, LogOut, ShoppingBag } from 'lucide-react';
+import { Search, User, LogOut, ShoppingBag, LogIn } from 'lucide-react';
 import SwapTheme from '../ui/SwapTheme';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -127,9 +127,9 @@ const Navbar = ({ items = [] }: NavbarProps) => {
         <div className="navbar-end gap-3">
           {!isLoggedIn ? (
             <>
-              <Link href="/login" className="btn btn-ghost hidden md:flex border-none hover:bg-primary/10 group rounded-xl">
-                <User size={18} className="text-primary group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-xs uppercase tracking-widest">Sign In</span>
+              <Link href="/login" className="btn btn-ghost flex items-center border-none hover:bg-primary/10 group rounded-xl px-3 md:px-4">
+                <LogIn size={18} className="text-primary group-hover:scale-110 transition-transform" />
+                <span className="hidden md:block font-bold text-xs uppercase tracking-widest">Sign In</span>
               </Link>
               <SwapTheme />
             </>

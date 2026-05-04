@@ -8,7 +8,7 @@ export default function LoginPage() {
     <main className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-10">
       <Link 
         href="/" 
-        className="absolute top-6 left-6 btn btn-ghost btn-sm gap-2 uppercase font-black text-[10px] opacity-50 hover:opacity-100"
+        className="z-10 absolute top-6 left-6 btn btn-ghost btn-sm gap-2 uppercase font-black text-[10px] opacity-50 hover:opacity-100"
       >
         <ArrowLeft size={16} /> Kembali
       </Link>

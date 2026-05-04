@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, File, X, Paperclip } from "lucide-react";
+import { Upload, File, X, Paperclip, AlertCircle } from "lucide-react";
 
 interface FileUploadProps {
   variant?: "box" | "minimal";
@@ -9,31 +10,69 @@ interface FileUploadProps {
 
 export default function FileUpload({ variant = "box" }: FileUploadProps) {
   const [fileName, setFileName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Konfigurasi Batasan
+  const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB dalam bytes
+  const ALLOWED_TYPES = [
+    "application/pdf", 
+    "application/postscript", // Untuk file .ai
+    "image/jpeg", 
+    "image/png"
+  ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setFileName(file.name);
+    setError(null);
+
+    if (file) {
+      // 1. Validasi Ekstensi (Cegah file Word/Docx dkk)
+      const allowedExtensions = ["pdf", "ai", "jpg", "jpeg", "png"];
+      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+        setError("FORMAT TIDAK DIDUKUNG (GUNAKAN PDF, AI, JPG, ATAU PNG)");
+        setFileName(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+
+      // 2. Validasi Ukuran (Maks 200MB)
+      if (file.size > MAX_FILE_SIZE) {
+        setError("UKURAN FILE TERLALU BESAR (MAKSIMAL 200MB)");
+        setFileName(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+
+      // Kalau aman semua
+      setFileName(file.name);
+    }
   };
 
   const clearFile = (e: React.MouseEvent) => {
     e.stopPropagation();
     setFileName(null);
+    setError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // UI Minimal
   if (variant === "minimal") {
     return (
       <div className="w-full min-w-0 max-w-full overflow-hidden">
-        <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+        <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept=".pdf,.ai,.jpg,.jpeg,.png" />
         {!fileName ? (
           <button 
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="btn btn-outline border-dashed border-2 w-full flex items-center justify-start gap-3 rounded-2xl h-14 bg-base-200/30 hover:bg-base-200 border-base-300 min-w-0 px-4 overflow-hidden"
+            className={`btn btn-outline border-dashed border-2 w-full flex items-center justify-start gap-3 rounded-2xl h-14 bg-base-200/30 hover:bg-base-200 min-w-0 px-4 overflow-hidden ${error ? 'border-error bg-error/5 text-error' : 'border-base-300'}`}
           >
-            <Paperclip size={18} className="text-primary shrink-0" />
-            <span className="opacity-50 font-black uppercase text-[10px] tracking-tighter truncate w-full text-left">Lampirkan File Desain</span>
+            {error ? <AlertCircle size={18} /> : <Paperclip size={18} className="text-primary shrink-0" />}
+            <span className={`font-black uppercase text-[10px] tracking-tighter truncate w-full text-left ${error ? 'opacity-100' : 'opacity-50'}`}>
+              {error || "Lampirkan File Desain"}
+            </span>
           </button>
         ) : (
           <div className="flex items-center gap-3 bg-primary/5 p-3 rounded-2xl border border-primary/20 w-full animate-in fade-in zoom-in duration-200 min-w-0 overflow-hidden">
@@ -52,6 +91,7 @@ export default function FileUpload({ variant = "box" }: FileUploadProps) {
     );
   }
 
+  // UI Box
   return (
     <div className="bg-base-100 border-base-content/5 rounded-2xl border w-full max-w-full min-w-0 p-6 shadow-sm flex flex-col overflow-hidden box-border">
       
@@ -62,16 +102,20 @@ export default function FileUpload({ variant = "box" }: FileUploadProps) {
       <div
         onClick={() => fileInputRef.current?.click()}
         className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-2xl py-8 px-4 transition-all cursor-pointer group w-full max-w-full min-w-0 overflow-hidden box-border ${
-          fileName ? "border-primary bg-primary/5" : "border-base-300 bg-base-200/50 hover:bg-base-200"
+          error ? "border-error bg-error/5" : fileName ? "border-primary bg-primary/5" : "border-base-300 bg-base-200/50 hover:bg-base-200"
         }`}
       >
-        <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+        <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept=".pdf,.ai,.jpg,.jpeg,.png" />
 
         {!fileName ? (
           <>
-            <Upload className="mb-4 opacity-20 group-hover:text-primary group-hover:opacity-100 transition-all shrink-0" size={32} />
-            <p className="text-[10px] text-center font-black uppercase opacity-50 tracking-tighter px-2">
-              Klik atau seret file desain
+            {error ? (
+              <AlertCircle className="mb-4 text-error animate-bounce" size={32} />
+            ) : (
+              <Upload className="mb-4 opacity-20 group-hover:text-primary group-hover:opacity-100 transition-all shrink-0" size={32} />
+            )}
+            <p className={`text-[10px] text-center font-black uppercase tracking-tighter px-2 ${error ? 'text-error' : 'opacity-50'}`}>
+              {error || "Klik atau seret file desain"}
             </p>
           </>
         ) : (
@@ -90,8 +134,8 @@ export default function FileUpload({ variant = "box" }: FileUploadProps) {
         )}
       </div>
       
-      <p className="text-[9px] mt-4 opacity-30 uppercase font-black text-center tracking-widest truncate w-full shrink-0">
-        * PDF, AI, JPG, PNG (Maks 50MB)
+      <p className={`text-[9px] mt-4 uppercase font-black text-center tracking-widest truncate w-full shrink-0 ${error ? 'text-error' : 'opacity-30'}`}>
+        {error ? `* ${error}` : "* PDF, AI, JPG, PNG (MAKS 200MB)"}
       </p>
     </div>
   );
