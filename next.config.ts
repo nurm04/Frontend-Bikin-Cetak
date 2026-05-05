@@ -35,6 +35,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'plymouth-asian-nancy-man.trycloudflare.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'bikincetak-api.up.railway.app',
         port: '',
         pathname: '/**',
