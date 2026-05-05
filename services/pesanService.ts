@@ -10,7 +10,7 @@ export interface OrderItem {
   item_name: string;
   qty: number;
   rate: number;
-  jasa_tambahan?: JasaTambahan[]; // Tambahin biar gak error pas kirim addons
+  jasa_tambahan?: JasaTambahan[];
 }
 
 export interface OrderRequest {

@@ -274,10 +274,6 @@ export default function CartClient() {
                       <span className="text-[10px] font-bold uppercase opacity-60">Subtotal</span>
                       <span className="font-bold">Rp {selectedSubtotal.toLocaleString("id-ID")}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-[10px] font-bold uppercase opacity-60">Biaya Admin</span>
-                      <span className="font-bold">Rp 0</span>
-                    </div>
                     <div className="divider opacity-10 my-0"></div>
                     <div className="flex flex-col gap-1 pt-2">
                       <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Total Tagihan</span>
