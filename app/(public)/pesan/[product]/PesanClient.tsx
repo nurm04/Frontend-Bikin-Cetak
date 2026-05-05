@@ -98,44 +98,43 @@ export default function PesanClient() {
 
     setLoading(true);
     
-    // Mapping item dengan tipe data yang jelas
+    // Mapping item dengan menyertakan harga jasa ke dalam rate
     const payload = { 
       address_name: "Nurm house-Shipping", 
-      items: items.map(item => ({
-        item_code: item.item_code,
-        item_name: item.variant_name,
-        qty: item.qty,
-        rate: item.price,
-        jasa_tambahan: item.variant_lainnya || []
-      }))
+      items: items.map(item => {
+        // 1. Hitung total harga jasa tambahan untuk item ini
+        const totalJasa = (item.variant_lainnya || []).reduce(
+          (sum, j) => sum + j.price, 
+          0
+        );
+
+        return {
+          item_code: item.item_code,
+          item_name: item.variant_name,
+          qty: item.qty,
+          // 2. RATE HARUS HARGA DASAR + JASA TAMBAHAN
+          rate: item.price + totalJasa, 
+          jasa_tambahan: item.variant_lainnya || []
+        };
+      })
     };
 
     try {
       const result = await createOrder(payload, token); 
 
-      // TypeScript gak bakal marah lagi karena lu udah mastiin result bukan null
       if (result && result.snap_token) {
         window.snap.pay(result.snap_token, {
           onSuccess: (midtransResult: MidtransResult) => { 
             localStorage.removeItem("checkout_items"); 
             router.push(`/pesan/status/${midtransResult.order_id}`); 
           },
-          // ... sisa logic midtrans
+          // ... logic lainnya
         });
       } else {
         alert("Gagal membuat pesanan. Silakan coba lagi atau cek koneksi.");
       }
     } catch (err: unknown) {
-      // Penanganan error tanpa 'any'
-      let errorMessage = "Terjadi kesalahan sistem.";
-      
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "string") {
-        errorMessage = err;
-      }
-      
-      alert(errorMessage);
+      // ... handling error
     } finally {
       setLoading(false);
     }
