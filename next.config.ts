@@ -41,6 +41,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'meeting-assembled-watched-tribal.trycloudflare.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'bikincetak-api.up.railway.app',
         port: '',
         pathname: '/**',

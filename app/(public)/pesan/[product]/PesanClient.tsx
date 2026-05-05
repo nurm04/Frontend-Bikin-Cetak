@@ -7,6 +7,14 @@ import { useRouter } from "next/navigation";
 import { CreditCard, MapPin, ShoppingBag, Loader2, ArrowLeft } from "lucide-react";
 import { createOrder, OrderItem } from "@/services/pesanService";
 import Link from "next/link";
+import CartProductItem from "@/components/shared/CardProductItem";
+
+// @/app/(public)/pesan/checkout/PesanClient.tsx
+
+interface JasaTambahan {
+  item_code: string;
+  price: number;
+}
 
 interface CartStorageItem {
   id: number;
@@ -15,6 +23,7 @@ interface CartStorageItem {
   qty: number;
   price: number;
   image_url?: string;
+  variant_lainnya?: JasaTambahan[]; // Ganti ini Nur!
 }
 
 interface MidtransResult {
@@ -30,6 +39,12 @@ interface MidtransResult {
   finish_redirect_url?: string;
 }
 
+interface CreateOrderResponse {
+  snap_token?: string;
+  error?: string;
+  message?: string;
+}
+
 declare global {
   interface Window {
     snap: { pay: (token: string, options: object) => void; };
@@ -38,7 +53,7 @@ declare global {
 
 export default function PesanClient() {
   const router = useRouter();
-  const [items, setItems] = useState<OrderItem[]>([]);
+  const [items, setItems] = useState<CartStorageItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isMounting, setIsMounting] = useState<boolean>(true);
 
@@ -48,14 +63,12 @@ export default function PesanClient() {
 
     try {
       const parsedItems: CartStorageItem[] = JSON.parse(savedData);
-      setItems(parsedItems.map(item => ({
-        item_code: item.item_code,
-        item_name: item.variant_name || "Produk Bikin Cetak",
-        qty: Number(item.qty),
-        rate: Number(item.price)
-      })));
-    } catch (e) { router.push("/cart"); }
-    finally { setIsMounting(false); }
+      setItems(parsedItems);
+    } catch (e) { 
+      router.push("/cart"); 
+    } finally { 
+      setIsMounting(false); 
+    }
   }, [router]);
 
   useEffect(() => {
@@ -73,10 +86,10 @@ export default function PesanClient() {
     };
   }, [loadCheckoutData]);
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (): Promise<void> => {
     if (items.length === 0) return;
     
-    const token = localStorage.getItem("token");
+    const token: string | null = localStorage.getItem("token");
     if (!token) {
       alert("Sesi login Anda sudah habis. Silakan login kembali.");
       router.push("/login");
@@ -85,33 +98,53 @@ export default function PesanClient() {
 
     setLoading(true);
     
+    // Mapping item dengan tipe data yang jelas
     const payload = { 
       address_name: "Nurm house-Shipping", 
-      items: items 
+      items: items.map(item => ({
+        item_code: item.item_code,
+        item_name: item.variant_name,
+        qty: item.qty,
+        rate: item.price,
+        jasa_tambahan: item.variant_lainnya || []
+      }))
     };
 
-    console.log("PAYLOAD GOLANG:", JSON.stringify(payload, null, 2));
+    try {
+      const result = await createOrder(payload, token); 
 
-    const result = await createOrder(payload, token); 
-
-    if (result?.snap_token) {
-      window.snap.pay(result.snap_token, {
-        onSuccess: (result: MidtransResult) => { 
-          localStorage.removeItem("checkout_items"); 
-          // Pastikan mengambil order_id yang valid dari respons Midtrans
-          const orderId = result.order_id; 
-          router.push(`/pesan/status/${orderId}`); 
-        },
-        onError: () => { alert("Pembayaran Gagal!"); }
-      });
-    } else {
-      alert("Gagal membuat pesanan. Cek log console!");
+      // TypeScript gak bakal marah lagi karena lu udah mastiin result bukan null
+      if (result && result.snap_token) {
+        window.snap.pay(result.snap_token, {
+          onSuccess: (midtransResult: MidtransResult) => { 
+            localStorage.removeItem("checkout_items"); 
+            router.push(`/pesan/status/${midtransResult.order_id}`); 
+          },
+          // ... sisa logic midtrans
+        });
+      } else {
+        alert("Gagal membuat pesanan. Silakan coba lagi atau cek koneksi.");
+      }
+    } catch (err: unknown) {
+      // Penanganan error tanpa 'any'
+      let errorMessage = "Terjadi kesalahan sistem.";
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "string") {
+        errorMessage = err;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
-  const subtotal = items.reduce((acc, item) => acc + (item.qty * item.rate), 0);
+  const totalBill = items.reduce((acc, item) => {
+    const addonPrice = item.variant_lainnya?.reduce((sum, j) => sum + j.price, 0) || 0;
+    return acc + ((item.price + addonPrice) * item.qty);
+  }, 0);
 
   if (isMounting) return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center">
@@ -123,6 +156,7 @@ export default function PesanClient() {
     <main className="min-h-screen bg-base-200 py-6 px-4 md:px-8 relative">
       <div className="max-w-7xl mx-auto">
         
+        {/* Breadcrumbs & Kembali */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="breadcrumbs text-[10px] uppercase font-black opacity-40 tracking-widest">
             <ul>
@@ -139,72 +173,47 @@ export default function PesanClient() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           <div className="lg:col-span-8 space-y-6">
-            
+            {/* Lokasi Pengiriman */}
             <div className="bg-base-100 rounded-2xl p-6 shadow-sm border border-base-content/5">
               <div className="flex items-center gap-3 mb-6 border-b border-base-content/5 pb-4">
                 <MapPin className="text-primary" size={20} />
                 <h2 className="text-xl font-black uppercase tracking-tight">Lokasi Pengiriman</h2>
               </div>
-              
               <div className="bg-base-200/50 p-6 rounded-2xl border border-dashed border-base-300 flex justify-between items-center">
                 <div>
-                  <p className="font-black text-sm uppercase tracking-tighter">Rumah Budi</p>
-                  <p className="text-xs font-bold opacity-60 mt-1">Gresik, Jawa Timur - 61121</p>
+                  <p className="font-black text-sm uppercase tracking-tighter">Nurm House</p>
+                  <p className="text-xs font-bold opacity-60 mt-1">Sumenep, Madura - 69417</p>
                 </div>
                 <button className="btn btn-ghost btn-xs uppercase font-bold text-[10px] opacity-50">Ubah</button>
               </div>
             </div>
 
+            {/* Daftar Produk (Menggunakan Komponen CartProductItem) */}
             <div className="bg-base-100 rounded-2xl p-6 shadow-sm border border-base-content/5">
               <div className="flex items-center gap-3 mb-6 border-b border-base-content/5 pb-4">
                 <ShoppingBag className="text-primary" size={20} />
-                <h2 className="text-xl font-black uppercase tracking-tight">Pesanan Anda ({items.length})</h2>
+                <h2 className="text-xl font-black uppercase tracking-tight">Ringkasan Produk ({items.length})</h2>
               </div>
               
               <div className="divide-y divide-base-content/5">
-                {items.map((item, idx) => (
-                  <div key={idx} className="py-6 flex flex-col sm:flex-row gap-6 items-start">
-                    
-                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-base-200 border border-base-content/5">
-                      <Image 
-                        src="/favicon.ico" 
-                        alt="icon" 
-                        fill 
-                        sizes="96px"
-                        className="object-contain p-4 opacity-40" 
-                      />
-                    </div>
-
-                    <div className="flex-1 space-y-1">
-                      <h3 className="font-black uppercase text-sm tracking-tight leading-tight">
-                        {item.item_name.split("-")[0] || item.item_name}
-                      </h3>
-                      <p className="text-xs font-bold text-primary">Rp {item.rate.toLocaleString("id-ID")} / pcs</p>
-                      
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <span className="badge badge-ghost text-[9px] uppercase font-bold opacity-60 py-3">
-                          VARIAN: {item.item_name.split("-").slice(1).join(" ") || "DEFAULT"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto gap-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold uppercase opacity-50">Jumlah:</span>
-                        <span className="text-sm font-black">{item.qty}</span>
-                      </div>
-                      <p className="font-black text-sm text-primary">
-                        Rp {(item.qty * item.rate).toLocaleString("id-ID")}
-                      </p>
-                    </div>
-
-                  </div>
+                {items.map((item) => (
+                  <CartProductItem
+                    key={item.id}
+                    id={item.id}
+                    variant_name={item.variant_name}
+                    price={item.price}
+                    qty={item.qty}
+                    image_url={item.image_url}
+                    // Oper ke prop komponen biar tampil baris pipe (|) nya
+                    jasa_tambahan={item.variant_lainnya || []} 
+                    isReadOnly={true}
+                  />
                 ))}
               </div>
             </div>
-
           </div>
 
+          {/* Sidebar Ringkasan Pembayaran */}
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-4">
               <div className="card bg-base-100 border-2 border-base-content/10 rounded-2xl overflow-hidden">
@@ -215,18 +224,14 @@ export default function PesanClient() {
                   
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-[10px] font-bold uppercase opacity-60">Subtotal Produk</span>
-                      <span className="font-bold">Rp {subtotal.toLocaleString("id-ID")}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-[10px] font-bold uppercase opacity-60">Biaya Layanan</span>
-                      <span className="font-bold">Rp 0</span>
+                      <span className="text-[10px] font-bold uppercase opacity-60">Total Pesanan</span>
+                      <span className="font-bold">Rp {totalBill.toLocaleString("id-ID")}</span>
                     </div>
                     <div className="divider opacity-10 my-0"></div>
                     <div className="flex flex-col gap-1 pt-2">
                       <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Total Tagihan</span>
                       <span className="text-3xl font-black text-primary tracking-tighter leading-none">
-                        Rp {subtotal.toLocaleString("id-ID")}
+                        Rp {totalBill.toLocaleString("id-ID")}
                       </span>
                     </div>
                   </div>

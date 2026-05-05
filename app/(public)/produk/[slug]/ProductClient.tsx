@@ -13,6 +13,10 @@ import { ShoppingBag, CreditCard, Award, CheckCircle, Truck, ShieldCheck, Info }
 import AlertPopup from "@/components/ui/AlertPopup";
 import { parseVariantsToFields, DynamicFormField } from "@/lib/variantHelper";
 
+interface ApiError {
+  message: string;
+}
+
 interface ProductClientLayoutProps {
   foundItem: ItemTemplate; 
   allVariants: VariantDetail[]; 
@@ -88,36 +92,63 @@ export default function ProductClientLayout({ foundItem, allVariants, initialVar
 
   const handleAddToCart = async () => {
     if (!variant) return;
-    const token = localStorage.getItem("token"); 
+    
+    const token: string | null = localStorage.getItem("token"); 
     if (!token) {
-      setPopup({ isOpen: true, title: "Perlu Login", message: "Silakan login dulu.", type: "warning" });
+      setPopup({ 
+        isOpen: true, 
+        title: "Perlu Login", 
+        message: "Silakan login terlebih dahulu untuk menambahkan produk ke keranjang.", 
+        type: "warning" 
+      });
       return;
     }
+
     setCartLoading(true);
-    const imageUrl = foundItem.image_url || "";
+    const imageUrl: string = foundItem.image_url || "";
+
+    const variantLainnya = Object.values(selectedAddons)
+      .filter((addon): addon is VariantLainnya => addon !== null)
+      .map((addon) => ({
+        item_code: addon.item_code,
+        price: addon.price,
+      }));
+
     try {
-      await addToCart({
+      const res = await addToCart({
         item_code: variant.item_code,
         variant_name: variant.variant_name,
         qty: currentQty,
         price: basePrice,
-        image_url: imageUrl
+        image_url: imageUrl,
+        variant_lainnya: variantLainnya
       }, token);
 
-      for (const addon of Object.values(selectedAddons)) {
-        if (addon) {
-          await addToCart({
-            item_code: addon.item_code,
-            variant_name: `${addon.name_variant} - ${addon.item_code.split('-').pop() || ""}`,
-            qty: currentQty,
-            price: addon.price,
-            image_url: imageUrl
-          }, token);
-        }
+      if (res.error) {
+        throw new Error(res.error);
       }
-      setPopup({ isOpen: true, title: "Berhasil!", message: "Masuk keranjang.", type: "success" });
-    } catch (err) {
-      setPopup({ isOpen: true, title: "Gagal", message: "Cek koneksi lu.", type: "error" });
+
+      setPopup({ 
+        isOpen: true, 
+        title: "Berhasil!", 
+        message: "Produk dan jasa tambahan berhasil dimasukkan ke keranjang.", 
+        type: "success" 
+      });
+    } catch (err: unknown) {
+      let errorMessage = "Terjadi kesalahan saat menghubungi server.";
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "string") {
+        errorMessage = err;
+      }
+
+      setPopup({ 
+        isOpen: true, 
+        title: "Gagal", 
+        message: errorMessage, 
+        type: "error" 
+      });
     } finally {
       setCartLoading(false);
     }

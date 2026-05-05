@@ -4,12 +4,18 @@
 
 const BASE_URL = "https://bikincetak-api.up.railway.app/v1/cart";
 
+export interface VariantLainnya {
+  item_code: string;
+  price: number;
+}
+
 export interface CartPayload {
   item_code: string;
   variant_name: string;
   qty: number;
   price: number;
   image_url: string;
+  variant_lainnya?: VariantLainnya[];
 }
 
 export async function addToCart(payload: CartPayload, token: string) {

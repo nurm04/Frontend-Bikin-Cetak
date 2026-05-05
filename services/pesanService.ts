@@ -1,10 +1,16 @@
 // @/services/pesanService.ts
 
+export interface JasaTambahan {
+  item_code: string;
+  price: number;
+}
+
 export interface OrderItem {
   item_code: string;
   item_name: string;
   qty: number;
   rate: number;
+  jasa_tambahan?: JasaTambahan[]; // Tambahin biar gak error pas kirim addons
 }
 
 export interface OrderRequest {
@@ -20,6 +26,10 @@ export interface OrderResponse {
 
 const API_URL = "https://bikincetak-api.up.railway.app/v1/order";
 
+/**
+ * Membuat pesanan ke backend Golang.
+ * Return null jika terjadi error jaringan atau server.
+ */
 export async function createOrder(data: OrderRequest, token: string): Promise<OrderResponse | null> {
   try {
     const response = await fetch(API_URL, {
@@ -35,12 +45,16 @@ export async function createOrder(data: OrderRequest, token: string): Promise<Or
 
     if (!response.ok) {
       console.error("ALASAN DITOLAK GOLANG:", responseData);
+      // Lempar error agar ditangkap oleh blok catch di bawah atau di komponen
       throw new Error(responseData.error || responseData.message || "Gagal membuat pesanan");
     }
 
-    return responseData;
+    // Pastikan responseData sesuai dengan OrderResponse
+    return responseData as OrderResponse;
   } catch (error) {
-    if (error instanceof Error) console.error("Order Service Error:", error.message);
+    if (error instanceof Error) {
+      console.error("Order Service Error:", error.message);
+    }
     return null;
   }
 }

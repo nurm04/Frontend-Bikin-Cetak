@@ -2,12 +2,17 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, CreditCard } from "lucide-react";
-import Image from "next/image";
+import { ArrowLeft, ShoppingBag, CreditCard } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getCartItems, updateCartItemQty, deleteCartItem } from "@/services/cartService";
 import AlertPopup from "@/components/ui/AlertPopup";
+import CartProductItem from "@/components/shared/CardProductItem";
+
+interface VariantLainnyaAPI {
+  item_code: string;
+  price: number;
+}
 
 interface CartItemAPI {
   id: number;
@@ -16,6 +21,7 @@ interface CartItemAPI {
   qty: number;
   price: number;
   image_url?: string;
+  variant_lainnya?: VariantLainnyaAPI[];
 }
 
 export default function CartClient() {
@@ -66,8 +72,15 @@ export default function CartClient() {
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const selectedSubtotal = cartItems
-    .filter(item => selectedIds.includes(item.id))
-    .reduce((total, item) => total + (item.price * item.qty), 0);
+  .filter((item) => selectedIds.includes(item.id))
+  .reduce((total: number, item: CartItemAPI) => {
+    const totalTambahan = (item.variant_lainnya || []).reduce(
+      (acc: number, j: VariantLainnyaAPI) => acc + j.price, 
+      0
+    );
+    const unitPriceTotal = item.price + totalTambahan;
+    return total + (unitPriceTotal * item.qty);
+  }, 0);
 
   const toggleSelect = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -223,88 +236,21 @@ export default function CartClient() {
               ) : (
                 <div className="divide-y divide-base-content/5">
                   {cartItems.map((item) => (
-                    <div key={item.id} className={`py-6 flex flex-col sm:flex-row gap-6 items-start transition-opacity ${(actionLoading === item.id && !popup.isOpen) ? "opacity-50 pointer-events-none" : (!selectedIds.includes(item.id) ? "opacity-60" : "opacity-100")}`}>
-                      
-                      {/* Checkbox per Item */}
-                      <div className="pt-8 hidden sm:block">
-                        <input 
-                          type="checkbox" 
-                          className="checkbox checkbox-primary checkbox-sm rounded-lg"
-                          checked={selectedIds.includes(item.id)}
-                          onChange={() => toggleSelect(item.id)}
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-4 sm:hidden w-full border-b border-base-content/5 pb-4">
-                         <input 
-                          type="checkbox" 
-                          className="checkbox checkbox-primary checkbox-sm rounded-lg"
-                          checked={selectedIds.includes(item.id)}
-                          onChange={() => toggleSelect(item.id)}
-                        />
-                        <span className="text-xs font-bold uppercase opacity-60">Pilih Produk Ini</span>
-                      </div>
-
-                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-base-200 border border-base-content/5">
-                        <Image 
-                          src={item.image_url || "/images/placeholder-product.jpg"} 
-                          alt={item.variant_name} 
-                          fill
-                          sizes="96px"
-                          className="object-cover"
-                        />
-                      </div>
-
-                      <div className="flex-1 space-y-1">
-                        <h3 className="font-black uppercase text-sm tracking-tight leading-tight">
-                          {item.variant_name.split("-")[0]} 
-                        </h3>
-                        <p className="text-xs font-bold text-primary">Rp {item.price.toLocaleString("id-ID")} / pcs</p>
-                        
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="badge badge-ghost text-[9px] uppercase font-bold opacity-60 py-3">
-                            VARIAN: {item.variant_name.split("-").slice(1).join(" ") || "DEFAULT"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto gap-4">
-                        <div className="flex items-center bg-base-200 rounded-xl p-1">
-                          <button 
-                            onClick={() => handleUpdateQty(item.id, item.qty - 1)} 
-                            disabled={actionLoading === item.id}
-                            className="btn btn-ghost btn-xs btn-square"
-                          >
-                            <Minus size={12}/>
-                          </button>
-                          
-                          <span className="px-3 text-xs font-black">
-                            {actionLoading === item.id && !popup.isOpen ? <span className="loading loading-spinner loading-xs"></span> : item.qty}
-                          </span>
-                          
-                          <button 
-                            onClick={() => handleUpdateQty(item.id, item.qty + 1)} 
-                            disabled={actionLoading === item.id}
-                            className="btn btn-ghost btn-xs btn-square"
-                          >
-                            <Plus size={12}/>
-                          </button>
-                        </div>
-                        
-                        <div className="flex items-center gap-4">
-                          <p className={`font-black text-sm ${selectedIds.includes(item.id) ? "text-primary" : ""}`}>
-                            Rp {(item.price * item.qty).toLocaleString("id-ID")}
-                          </p>
-                          <button 
-                            onClick={() => triggerDelete(item.id)}
-                            disabled={actionLoading === item.id}
-                            className="btn btn-ghost btn-xs text-error btn-square hover:bg-error/20"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <CartProductItem
+                      key={item.id}
+                      id={item.id}
+                      variant_name={item.variant_name}
+                      price={item.price}
+                      qty={item.qty}
+                      image_url={item.image_url}
+                      // Oper field variant_lainnya ke prop jasa_tambahan
+                      jasa_tambahan={item.variant_lainnya || []} 
+                      isSelected={selectedIds.includes(item.id)}
+                      onToggleSelect={toggleSelect}
+                      onUpdateQty={handleUpdateQty}
+                      onDelete={triggerDelete}
+                      isLoading={actionLoading === item.id}
+                    />
                   ))}
                 </div>
               )}
