@@ -68,5 +68,5 @@ export async function loginUser(payload: Pick<RegisterPayload, 'email' | 'passwo
 
 export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete("token");
+  cookieStore.delete("jwt");
 }

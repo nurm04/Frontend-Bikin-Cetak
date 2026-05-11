@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'https://bryant-opens-looks-apache.trycloudflare.com',
+        hostname: 'https://compression-researchers-boc-western.trycloudflare.com',
         port: '',
         pathname: '/**',
       },

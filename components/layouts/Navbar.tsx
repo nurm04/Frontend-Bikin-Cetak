@@ -25,35 +25,30 @@ const Navbar = ({ items = [] }: NavbarProps) => {
   const router = useRouter();  
 
   const handleLogout = useCallback(async () => {
-    // 1. Panggil server action buat hapus cookie HttpOnly
     await logoutAction();
 
-    // 2. Reset State
     setIsLoggedIn(false);
     setUserName("Pelanggan");
     
-    // 3. Redirect & Refresh
     router.push("/login");
     router.refresh();
   }, [router]);
 
   const checkAuth = useCallback(async () => {
-    // Karena backend pake cookie HttpOnly, kita langsung tembak profil.
-    // Browser otomatis bawa cookie-nya kalau 'credentials: include' di set di fetch.
-    const res = await getUserProfile(); 
-    
-    if (res.data) {
-      setIsLoggedIn(true);
-      setUserName(res.data.full_name || res.data.email || "User");
-    } else {
-      setIsLoggedIn(false);
-      setUserName("Pelanggan");
-    }
-  }, []);
+  const res = await getUserProfile(); 
+  
+  if (res.data) {
+    setIsLoggedIn(true);
+    setUserName(res.data.name || res.data.email || "User");
+  } else {
+    setIsLoggedIn(false);
+    setUserName("Pelanggan");
+  }
+}, []);
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth, pathname]); // Re-check tiap pindah halaman
+  }, [checkAuth, pathname]);
 
   const isHome = pathname === '/';
   const toggleMenu = (key: string) => setOpenMenu(openMenu === key ? null : key);

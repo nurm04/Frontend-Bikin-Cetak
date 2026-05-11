@@ -7,9 +7,9 @@ export interface UserProfile {
 
 const API_URL = "https://bikincetak-api.up.railway.app/v1/user/profile";
 
-export async function getUserProfile(): Promise<{ data?: UserProfile; error?: string }> {
+export async function getUserProfile() {
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch("https://bikincetak-api.up.railway.app/v1/user/profile", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -21,11 +21,11 @@ export async function getUserProfile(): Promise<{ data?: UserProfile; error?: st
     const resData = await response.json();
 
     if (!response.ok) {
-      return { error: resData.message || "Gagal mengambil profil" };
+      return { error: "Session expired" };
     }
 
     return { data: resData.data || resData };
   } catch (error) {
-    return { error: "Koneksi ke server terputus." };
+    return { error: "Koneksi terputus." };
   }
 }
