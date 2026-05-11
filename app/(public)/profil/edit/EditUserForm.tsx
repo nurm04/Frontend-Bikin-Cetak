@@ -8,8 +8,8 @@ import AlertPopup from "@/components/ui/AlertPopup";
 export default function EditUserForm({ initialData }: { initialData: UserProfile }) {
   const [loading, setLoading] = useState(false);
 	const [popup, setPopup] = useState<{
-			isOpen: boolean; title: string; message: string; type: "success" | "error" | "warning" | "info";
-		}>({ isOpen: false, title: "", message: "", type: "info" });
+		isOpen: boolean; title: string; message: string; type: "success" | "error" | "warning" | "info";
+	}>({ isOpen: false, title: "", message: "", type: "info" });
 	
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
