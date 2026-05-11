@@ -26,8 +26,6 @@ export default function LoginForm() {
     };
 
     try {
-      // 1. Panggil loginUser (Server Action)
-      // Karena backend lu set cookie, browser otomatis simpan pas fetch ini sukses
       const res = await loginUser(payload);
       
       if (res.error) {
@@ -36,8 +34,6 @@ export default function LoginForm() {
         return;
       }
 
-      // 2. Jika sukses (status true), langsung redirect
-      // Pake window.location.href biar refresh total dan Navbar bisa checkAuth ulang
       window.location.href = "/"; 
       
     } catch (err: unknown) {

@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useState, useEffect, useCallback } from 'react';
 import { User, LogOut, ShoppingBag, LogIn } from 'lucide-react';
@@ -20,6 +19,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("Pelanggan");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   
   const pathname = usePathname();
   const router = useRouter();  
@@ -35,20 +35,23 @@ const Navbar = ({ items = [] }: NavbarProps) => {
   }, [router]);
 
   const checkAuth = useCallback(async () => {
-  const res = await getUserProfile(); 
-  
-  if (res.data) {
-    setIsLoggedIn(true);
-    setUserName(res.data.name || res.data.email || "User");
-  } else {
-    setIsLoggedIn(false);
-    setUserName("Pelanggan");
-  }
-}, []);
+    const res = await getUserProfile();
+    
+    if (res.data) {
+      setIsLoggedIn(true);
+      setUserName(res.data.full_name || res.data.email || "User");
+    } else {
+      setIsLoggedIn(false);
+      setUserName("Pelanggan");
+    }
+  }, []);
 
   useEffect(() => {
+    setMounted(true);
     checkAuth();
-  }, [checkAuth, pathname]);
+  }, [checkAuth]);
+
+  if (!mounted) return <div className="h-10 w-20 bg-base-200 animate-pulse rounded-xl"></div>;
 
   const isHome = pathname === '/';
   const toggleMenu = (key: string) => setOpenMenu(openMenu === key ? null : key);

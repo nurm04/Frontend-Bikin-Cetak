@@ -51,13 +51,37 @@ export async function loginUser(payload: Pick<RegisterPayload, 'email' | 'passwo
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      credentials: "include", 
     });
 
     const data = await response.json();
 
     if (!response.ok) {
       return { error: data.message || "Email atau password salah" };
+    }
+
+    // ==========================================
+    // BAGIAN PENTING: TANGKAP & TERUSKAN COOKIE
+    // ==========================================
+    // 1. Ambil array Set-Cookie dari response Golang
+    const setCookies = response.headers.getSetCookie();
+
+    if (setCookies && setCookies.length > 0) {
+      const jwtCookieStr = setCookies.find(c => c.startsWith("jwt="));
+
+      if (jwtCookieStr) {
+        const tokenValue = jwtCookieStr.split(";")[0].substring(4);
+
+        const cookieStore = await cookies();
+        cookieStore.set({
+          name: "jwt",
+          value: tokenValue,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 
+        });
+      }
     }
 
     return data;
