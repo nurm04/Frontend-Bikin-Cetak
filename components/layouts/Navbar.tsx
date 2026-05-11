@@ -39,7 +39,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
     
     if (res.data) {
       setIsLoggedIn(true);
-      setUserName(res.data.full_name || res.data.email || "User");
+      setUserName(res.data.customer_name || res.data.email || "User");
     } else {
       setIsLoggedIn(false);
       setUserName("Pelanggan");
@@ -120,7 +120,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
                 </div>
               </div>
               
-              <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-2xl z-50 mt-4 w-64 p-2 shadow-xl border border-base-content/5">
+              <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-2xl z-50 mt-4 w-72 p-2 shadow-xl border border-base-content/5">
                 <li className="pointer-events-none mb-2 w-full max-w-full overflow-hidden">
                   <div className="block px-3 py-2 bg-primary/5 rounded-xl w-full max-w-full overflow-hidden box-border">
                     <span className="font-bold text-[10px] truncate text-primary block w-full uppercase tracking-widest">
@@ -129,7 +129,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
                   </div>
                 </li>
                 
-                <li><Link href="/profile" className="py-2 font-bold flex items-center gap-3"><User size={16} className="opacity-70" /> Profil Saya</Link></li>
+                <li><Link href="/profil" className="py-2 font-bold flex items-center gap-3"><User size={16} className="opacity-70" /> Profil Saya</Link></li>
                 <li><Link href="/cart" className="py-2 font-bold flex items-center gap-3"><ShoppingBag size={16} className="opacity-70" /> Keranjang</Link></li>
                 <div className="divider my-0 opacity-30"></div>
                 <li>

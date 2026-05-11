@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import { cookies } from "next/headers";
-import { getUserProfile, UserProfile } from "./userService";
 
 const BASE_URL = "https://bikincetak-api.up.railway.app/v1/auth";
 

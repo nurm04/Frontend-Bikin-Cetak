@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // @/component/shared/LoginForm.tsx
 "use client";
 
@@ -5,12 +6,10 @@ import { useState } from "react";
 import { LogIn, Mail, Lock } from "lucide-react";
 import AuthInput from "@/components/ui/AuthInput";
 import Alert from "@/components/ui/Alert";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginUser } from "@/services/authService";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
