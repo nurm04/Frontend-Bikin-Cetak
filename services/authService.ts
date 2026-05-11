@@ -1,5 +1,8 @@
 "use server";
 
+import { cookies } from "next/headers";
+import { getUserProfile, UserProfile } from "./userService";
+
 const BASE_URL = "https://bikincetak-api.up.railway.app/v1/auth";
 
 // Interface untuk Register
@@ -48,15 +51,22 @@ export async function loginUser(payload: Pick<RegisterPayload, 'email' | 'passwo
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      credentials: "include", 
     });
 
     const data = await response.json();
+
     if (!response.ok) {
       return { error: data.message || "Email atau password salah" };
     }
 
     return data;
   } catch (err) {
-    return { error: "Gagal terhubung ke server percetakan." };
+    return { error: "Gagal terhubung ke server." };
   }
+}
+
+export async function logoutAction(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete("token");
 }

@@ -1,12 +1,15 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { useState, useEffect } from 'react';
-import { Search, User, LogOut, ShoppingBag, LogIn } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { User, LogOut, ShoppingBag, LogIn } from 'lucide-react';
 import SwapTheme from '../ui/SwapTheme';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { ItemData } from "@/services/itemService";
+import { getUserProfile } from "@/services/userService";
+import { logoutAction } from "@/services/authService";
 import { slugify } from "@/lib/utils";
 
 interface NavbarProps {
@@ -14,63 +17,54 @@ interface NavbarProps {
 }
 
 const Navbar = ({ items = [] }: NavbarProps) => {
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [emailUser, setEmailUser] = useState<string>("Pelanggan");
+  const [userName, setUserName] = useState<string>("Pelanggan");
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   
   const pathname = usePathname();
   const router = useRouter();  
 
-  useEffect(() => {
-    const checkStatus = () => {
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("token");
-        if (token) {
-          setIsLoggedIn(true);
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            
-            console.log("ISI TOKEN GUE:", payload);
-            
-            const rawName = payload.email || "Pelanggan"; 
-            const cleanName = rawName.includes("_") ? rawName.split(" ").slice(1).join(" ") : rawName;
-            
-            setEmailUser(cleanName);
-          } catch (error) {
-            setEmailUser("Pelanggan");
-          }
-        } else {
-          setIsLoggedIn(false);
-        }
-      }
-    };
+  const handleLogout = useCallback(async () => {
+    // 1. Panggil server action buat hapus cookie HttpOnly
+    await logoutAction();
 
-    checkStatus();
-  }, [pathname]);
-
-  const handleLogout = () => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-    
-    localStorage.removeItem("token");
+    // 2. Reset State
     setIsLoggedIn(false);
-    router.push("/");
+    setUserName("Pelanggan");
+    
+    // 3. Redirect & Refresh
+    router.push("/login");
     router.refresh();
-  };
+  }, [router]);
+
+  const checkAuth = useCallback(async () => {
+    // Karena backend pake cookie HttpOnly, kita langsung tembak profil.
+    // Browser otomatis bawa cookie-nya kalau 'credentials: include' di set di fetch.
+    const res = await getUserProfile(); 
+    
+    if (res.data) {
+      setIsLoggedIn(true);
+      setUserName(res.data.full_name || res.data.email || "User");
+    } else {
+      setIsLoggedIn(false);
+      setUserName("Pelanggan");
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth, pathname]); // Re-check tiap pindah halaman
 
   const isHome = pathname === '/';
-  const toggleMenu = (key: string) => {
-    setOpenMenu(openMenu === key ? null : key);
-  };
+  const toggleMenu = (key: string) => setOpenMenu(openMenu === key ? null : key);
 
   const dynamicCategories = items
-  .filter((group) => group.item_group_name.toLowerCase() !== "services")
-  .map((group) => ({
-    key: slugify(group.item_group_name),
-    label: group.item_group_name,
-    submenu: group.templates.map((t) => ({ name: t.item_name }))
-  }));
+    .filter((group) => group.item_group_name.toLowerCase() !== "services")
+    .map((group) => ({
+      key: slugify(group.item_group_name),
+      label: group.item_group_name,
+      submenu: group.templates.map((t) => ({ name: t.item_name }))
+    }));
 
   return (
     <>
@@ -103,13 +97,7 @@ const Navbar = ({ items = [] }: NavbarProps) => {
           </div>
           <Link href="/" className="btn btn-ghost p-0 px-2 flex items-center gap-2 hover:bg-transparent">
             <div className="relative w-8 h-8 md:w-10 md:h-10">
-              <Image 
-                src="/favicon.ico" 
-                alt="BikinCetak Logo" 
-                fill
-                className="object-contain"
-                priority
-              />
+              <Image src="/favicon.ico" alt="BikinCetak Logo" fill className="object-contain" priority />
             </div>
             <span className="text-xl font-black text-primary tracking-tighter hidden md:block">
               BIKIN<span className="text-base-content">CETAK</span>
@@ -117,19 +105,12 @@ const Navbar = ({ items = [] }: NavbarProps) => {
           </Link>
         </div>
 
-        <div className="navbar-center hidden lg:flex">
-          {/* <label className="input bg-primary/10 border border-transparent flex items-center gap-2 w-96 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary focus-within:outline-none rounded-2xl">
-            <Search size={18} className="text-primary" />
-            <input type="text" className="grow outline-none bg-transparent" placeholder="Cari brosur, banner..." />
-          </label> */}
-        </div>
-
         <div className="navbar-end gap-3">
           {!isLoggedIn ? (
             <>
               <Link href="/login" className="btn btn-ghost flex items-center border-none hover:bg-primary/10 group rounded-xl px-3 md:px-4">
                 <LogIn size={18} className="text-primary group-hover:scale-110 transition-transform" />
-                <span className="hidden md:block font-bold text-xs uppercase tracking-widest">Sign In</span>
+                <span className="hidden md:block font-bold text-xs uppercase tracking-widest text-primary">Sign In</span>
               </Link>
               <SwapTheme />
             </>
@@ -141,47 +122,27 @@ const Navbar = ({ items = [] }: NavbarProps) => {
                 </div>
               </div>
               
-              <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-2xl z-50 mt-4 w-56 p-2 shadow-xl border border-base-content/5">
-                
+              <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-2xl z-50 mt-4 w-64 p-2 shadow-xl border border-base-content/5">
                 <li className="pointer-events-none mb-2 w-full max-w-full overflow-hidden">
                   <div className="block px-3 py-2 bg-primary/5 rounded-xl w-full max-w-full overflow-hidden box-border">
-                    <span className="font-bold text-sm truncate text-primary block w-full">
-                      {emailUser}
+                    <span className="font-bold text-[10px] truncate text-primary block w-full uppercase tracking-widest">
+                      {userName}
                     </span>
                   </div>
                 </li>
                 
-                <li>
-                  <Link href="/profile" className="py-2 font-bold flex items-center gap-3">
-                    <User size={16} className="opacity-70" />
-                    Profil Saya
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/cart" className="py-2 font-bold flex items-center gap-3">
-                    <ShoppingBag size={16} className="opacity-70" />
-                    Keranjang
-                  </Link>
-                </li>
-                
+                <li><Link href="/profile" className="py-2 font-bold flex items-center gap-3"><User size={16} className="opacity-70" /> Profil Saya</Link></li>
+                <li><Link href="/cart" className="py-2 font-bold flex items-center gap-3"><ShoppingBag size={16} className="opacity-70" /> Keranjang</Link></li>
                 <div className="divider my-0 opacity-30"></div>
-                
                 <li>
                   <div className="py-1 flex justify-between items-center hover:bg-transparent cursor-default active:bg-transparent">
                     <span className="font-bold text-xs opacity-70">Ganti Tema</span>
-                    <div className="-mr-2">
-                      <SwapTheme />
-                    </div>
+                    <div className="-mr-2"><SwapTheme /></div>
                   </div>
                 </li>
-                
                 <div className="divider my-0 opacity-30"></div>
-                
                 <li>
-                  <button 
-                    onClick={handleLogout} 
-                    className="py-2 text-error font-black flex items-center gap-3 hover:bg-error/10 hover:text-error focus:text-error"
-                  >
+                  <button onClick={handleLogout} className="py-2 text-error font-black flex items-center gap-3 hover:bg-error/10">
                     <LogOut size={16} /> Keluar
                   </button>
                 </li>

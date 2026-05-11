@@ -9,8 +9,6 @@ import { createOrder, OrderItem } from "@/services/pesanService";
 import Link from "next/link";
 import CartProductItem from "@/components/shared/CardProductItem";
 
-// @/app/(public)/pesan/checkout/PesanClient.tsx
-
 interface JasaTambahan {
   item_code: string;
   price: number;
@@ -23,7 +21,7 @@ interface CartStorageItem {
   qty: number;
   price: number;
   image_url?: string;
-  variant_lainnya?: JasaTambahan[]; // Ganti ini Nur!
+  variant_lainnya?: JasaTambahan[];
 }
 
 interface MidtransResult {
@@ -98,11 +96,9 @@ export default function PesanClient() {
 
     setLoading(true);
     
-    // Mapping item dengan menyertakan harga jasa ke dalam rate
     const payload = { 
       address_name: "Nurm house-Shipping", 
       items: items.map(item => {
-        // 1. Hitung total harga jasa tambahan untuk item ini
         const totalJasa = (item.variant_lainnya || []).reduce(
           (sum, j) => sum + j.price, 
           0
@@ -112,7 +108,6 @@ export default function PesanClient() {
           item_code: item.item_code,
           item_name: item.variant_name,
           qty: item.qty,
-          // 2. RATE HARUS HARGA DASAR + JASA TAMBAHAN
           rate: item.price + totalJasa, 
           jasa_tambahan: item.variant_lainnya || []
         };
@@ -128,13 +123,11 @@ export default function PesanClient() {
             localStorage.removeItem("checkout_items"); 
             router.push(`/pesan/status/${midtransResult.order_id}`); 
           },
-          // ... logic lainnya
         });
       } else {
         alert("Gagal membuat pesanan. Silakan coba lagi atau cek koneksi.");
       }
     } catch (err: unknown) {
-      // ... handling error
     } finally {
       setLoading(false);
     }
@@ -155,7 +148,6 @@ export default function PesanClient() {
     <main className="min-h-screen bg-base-200 py-6 px-4 md:px-8 relative">
       <div className="max-w-7xl mx-auto">
         
-        {/* Breadcrumbs & Kembali */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="breadcrumbs text-[10px] uppercase font-black opacity-40 tracking-widest">
             <ul>
@@ -172,7 +164,6 @@ export default function PesanClient() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           <div className="lg:col-span-8 space-y-6">
-            {/* Lokasi Pengiriman */}
             <div className="bg-base-100 rounded-2xl p-6 shadow-sm border border-base-content/5">
               <div className="flex items-center gap-3 mb-6 border-b border-base-content/5 pb-4">
                 <MapPin className="text-primary" size={20} />
@@ -187,7 +178,6 @@ export default function PesanClient() {
               </div>
             </div>
 
-            {/* Daftar Produk (Menggunakan Komponen CartProductItem) */}
             <div className="bg-base-100 rounded-2xl p-6 shadow-sm border border-base-content/5">
               <div className="flex items-center gap-3 mb-6 border-b border-base-content/5 pb-4">
                 <ShoppingBag className="text-primary" size={20} />
@@ -203,7 +193,6 @@ export default function PesanClient() {
                     price={item.price}
                     qty={item.qty}
                     image_url={item.image_url}
-                    // Oper ke prop komponen biar tampil baris pipe (|) nya
                     jasa_tambahan={item.variant_lainnya || []} 
                     isReadOnly={true}
                   />
@@ -212,7 +201,6 @@ export default function PesanClient() {
             </div>
           </div>
 
-          {/* Sidebar Ringkasan Pembayaran */}
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-4">
               <div className="card bg-base-100 border-2 border-base-content/10 rounded-2xl overflow-hidden">

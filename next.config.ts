@@ -29,19 +29,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'sail-sponsor-dow-reactions.trycloudflare.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'plymouth-asian-nancy-man.trycloudflare.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'meeting-assembled-watched-tribal.trycloudflare.com',
+        hostname: 'https://bryant-opens-looks-apache.trycloudflare.com',
         port: '',
         pathname: '/**',
       },

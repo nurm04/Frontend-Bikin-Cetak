@@ -26,6 +26,8 @@ export default function LoginForm() {
     };
 
     try {
+      // 1. Panggil loginUser (Server Action)
+      // Karena backend lu set cookie, browser otomatis simpan pas fetch ini sukses
       const res = await loginUser(payload);
       
       if (res.error) {
@@ -34,15 +36,11 @@ export default function LoginForm() {
         return;
       }
 
-      const token = res.token || res.data?.token;
-
-      if (token) { 
-        localStorage.setItem("token", token);
-        window.location.href = "/"; 
-      } else {
-        setError("Token tidak ditemukan dari server.");
-      }
-    } catch (err) {
+      // 2. Jika sukses (status true), langsung redirect
+      // Pake window.location.href biar refresh total dan Navbar bisa checkAuth ulang
+      window.location.href = "/"; 
+      
+    } catch (err: unknown) {
       setError("Terjadi kesalahan sistem yang tidak diketahui.");
     } finally {
       setLoading(false);
@@ -52,13 +50,41 @@ export default function LoginForm() {
   return (
     <form className="space-y-5" onSubmit={handleLogin}>
       {error && <Alert type="error" message={error} onClose={() => setError("")} />}
-      <AuthInput label="Alamat Email" name="email" type="email" placeholder="nama@email.com" icon={<Mail size={18} />} />
-      <AuthInput label="Kata Sandi" name="password" type="password" placeholder="••••••••" icon={<Lock size={18} />}
-        rightLabel={<Link href="#" className="text-primary font-black text-[10px] uppercase hover:underline">Lupa?</Link>}
+      
+      <AuthInput 
+        label="Alamat Email" 
+        name="email" 
+        type="email" 
+        placeholder="nama@email.com" 
+        icon={<Mail size={18} />} 
+      />
+      
+      <AuthInput 
+        label="Kata Sandi" 
+        name="password" 
+        type="password" 
+        placeholder="••••••••" 
+        icon={<Lock size={18} />}
+        rightLabel={
+          <Link href="#" className="text-primary font-black text-[10px] uppercase hover:underline">
+            Lupa?
+          </Link>
+        }
       />
 
-      <button type="submit" disabled={loading} className="btn btn-primary w-full rounded-2xl shadow-xl shadow-primary/30 uppercase font-black tracking-widest mt-4 h-14">
-        {loading ? <span className="loading loading-spinner"></span> : <div className="flex items-center gap-2"><span>Masuk Akun</span><LogIn size={18} /></div>}
+      <button 
+        type="submit" 
+        disabled={loading} 
+        className="btn btn-primary w-full rounded-2xl shadow-xl shadow-primary/30 uppercase font-black tracking-widest mt-4 h-14"
+      >
+        {loading ? (
+          <span className="loading loading-spinner"></span>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span>Masuk Akun</span>
+            <LogIn size={18} />
+          </div>
+        )}
       </button>
     </form>
   );
