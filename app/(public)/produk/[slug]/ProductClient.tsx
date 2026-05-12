@@ -71,39 +71,28 @@ export default function ProductClientLayout({ foundItem, allVariants, initialVar
   }, [variant]);
 
   const handleAttributeChange = async (name: string, value: string) => {
-  const updatedAttrs = { ...selectedAttrs, [name]: value };
-  setSelectedAttrs(updatedAttrs);
+    const updatedAttrs = { ...selectedAttrs, [name]: value };
+    setSelectedAttrs(updatedAttrs);
 
-  const isCoreAttribute = dynamicFields.some(f => f.name === name);
+    const isCoreAttribute = dynamicFields.some(f => f.name === name);
 
-  if (isCoreAttribute) {
-    setLoading(true);
-    const data = await getVariantDetail(foundItem.item_name, updatedAttrs);
-    if (data) {
-      setVariant(data);
-      setSelectedAddons({});
+    if (isCoreAttribute) {
+      setLoading(true);
+      const data = await getVariantDetail(foundItem.item_name, updatedAttrs);
+      if (data) {
+        setVariant(data);
+        setSelectedAddons({});
+      }
+      setLoading(false);
+    } else if (groupedAddons[name]) {
+      const addonObj = groupedAddons[name].find(a => a.item_code === value) || null;
+      setSelectedAddons(prev => ({ ...prev, [name]: addonObj }));
     }
-    setLoading(false);
-  } else if (groupedAddons[name]) {
-    const addonObj = groupedAddons[name].find(a => a.item_code === value) || null;
-    setSelectedAddons(prev => ({ ...prev, [name]: addonObj }));
-  }
-};
+  };
 
   const handleAddToCart = async () => {
     if (!variant) return;
     
-    const token: string | null = localStorage.getItem("token"); 
-    if (!token) {
-      setPopup({ 
-        isOpen: true, 
-        title: "Perlu Login", 
-        message: "Silakan login terlebih dahulu untuk menambahkan produk ke keranjang.", 
-        type: "warning" 
-      });
-      return;
-    }
-
     setCartLoading(true);
     const imageUrl: string = foundItem.image_url || "";
 
@@ -122,27 +111,30 @@ export default function ProductClientLayout({ foundItem, allVariants, initialVar
         price: basePrice,
         image_url: imageUrl,
         variant_lainnya: variantLainnya
-      }, token);
+      });
 
       if (res.error) {
+        if (res.error.toLowerCase().includes("login") || res.error.toLowerCase().includes("sesi")) {
+          setPopup({ 
+            isOpen: true, 
+            title: "Perlu Login", 
+            message: "Silakan login terlebih dahulu untuk menambahkan produk ke keranjang.", 
+            type: "warning" 
+          });
+          return;
+        }
         throw new Error(res.error);
       }
 
       setPopup({ 
         isOpen: true, 
         title: "Berhasil!", 
-        message: "Produk dan jasa tambahan berhasil dimasukkan ke keranjang.", 
+        message: "Produk berhasil dimasukkan ke keranjang.", 
         type: "success" 
       });
-    } catch (err: unknown) {
-      let errorMessage = "Terjadi kesalahan saat menghubungi server.";
-      
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "string") {
-        errorMessage = err;
-      }
 
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan sistem.";
       setPopup({ 
         isOpen: true, 
         title: "Gagal", 

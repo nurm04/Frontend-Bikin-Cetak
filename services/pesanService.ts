@@ -1,21 +1,10 @@
-// @/services/pesanService.ts
+"use server";
 
-export interface JasaTambahan {
-  item_code: string;
-  price: number;
-}
-
-export interface OrderItem {
-  item_code: string;
-  item_name: string;
-  qty: number;
-  rate: number;
-  jasa_tambahan?: JasaTambahan[];
-}
+import { cookies } from "next/headers";
 
 export interface OrderRequest {
   address_name: string;
-  items: OrderItem[];
+  selected_item_ids: string[];
 }
 
 export interface OrderResponse {
@@ -26,30 +15,39 @@ export interface OrderResponse {
 
 const API_URL = "https://bikincetak-api.up.railway.app/v1/order";
 
-/**
- * Membuat pesanan ke backend Golang.
- * Return null jika terjadi error jaringan atau server.
- */
-export async function createOrder(data: OrderRequest, token: string): Promise<OrderResponse | null> {
+async function getAuthHeader() {
+  const cookieStore = await cookies();
+  const jwtCookie = cookieStore.get("jwt");
+  if (!jwtCookie) return null;
+  return {
+    "Content-Type": "application/json",
+    "Cookie": `jwt=${jwtCookie.value}`
+  };
+}
+
+export async function createOrder(data: OrderRequest): Promise<OrderResponse | null> {
   try {
+    const headers = await getAuthHeader();
+    
+    if (!headers) {
+      console.error("ORDER_SERVICE: Tidak ada sesi aktif.");
+      return null;
+    }
+
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
+      headers,
       body: JSON.stringify(data),
+      cache: "no-store",
     });
 
     const responseData = await response.json();
 
     if (!response.ok) {
       console.error("ALASAN DITOLAK GOLANG:", responseData);
-      // Lempar error agar ditangkap oleh blok catch di bawah atau di komponen
       throw new Error(responseData.error || responseData.message || "Gagal membuat pesanan");
     }
 
-    // Pastikan responseData sesuai dengan OrderResponse
     return responseData as OrderResponse;
   } catch (error) {
     if (error instanceof Error) {

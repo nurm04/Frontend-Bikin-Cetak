@@ -49,19 +49,17 @@ export default function CartClient() {
 
   /* eslint-disable react-hooks/set-state-in-effect */
   const fetchCart = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Silakan login terlebih dahulu untuk melihat keranjang.");
-      router.push("/login");
-      return;
-    }
-
-    const res = await getCartItems(token);
+    const res = await getCartItems();
     
     if (res.error) {
+      if (res.error.toLowerCase().includes("sesi") || res.error.toLowerCase().includes("login")) {
+        router.push("/login");
+        return;
+      }
       setError(res.error);
     } else {
       setCartItems(res.data?.items || []); 
+      setError(null);
     }
     setLoading(false);
   }, [router]);
@@ -93,15 +91,12 @@ export default function CartClient() {
   const handleUpdateQty = async (id: number, newQty: number) => {
     if (newQty < 1) return;
     
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     setActionLoading(id);
 
-    const res = await updateCartItemQty(id, newQty, token);
+    const res = await updateCartItemQty(id, newQty);
     
     if (res.error) {
-      alert(res.error);
+      setError(res.error);
     } else {
       const newCart = cartItems.map(item => 
         item.id === id ? { ...item, qty: newQty } : item
@@ -126,12 +121,10 @@ export default function CartClient() {
     const id = popup.idToDelete;
     if (!id) return;
 
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     setActionLoading(id);
     
-    const res = await deleteCartItem(id, token);
+    // Panggil service tanpa token
+    const res = await deleteCartItem(id);
 
     if (res.error) {
       setPopup({

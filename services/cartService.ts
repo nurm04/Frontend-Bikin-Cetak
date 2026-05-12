@@ -1,8 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// @/services/cartService.ts
 "use server";
 
+import { cookies } from "next/headers";
+
 const BASE_URL = "https://bikincetak-api.up.railway.app/v1/cart";
+
+async function getAuthHeader() {
+  const cookieStore = await cookies();
+  const jwtCookie = cookieStore.get("jwt");
+  if (!jwtCookie) return null;
+  return {
+    "Content-Type": "application/json",
+    "Cookie": `jwt=${jwtCookie.value}`
+  };
+}
 
 export interface VariantLainnya {
   item_code: string;
@@ -18,14 +29,14 @@ export interface CartPayload {
   variant_lainnya?: VariantLainnya[];
 }
 
-export async function addToCart(payload: CartPayload, token: string) {
+export async function addToCart(payload: CartPayload) {
   try {
+    const headers = await getAuthHeader();
+    if (!headers) return { error: "Silakan login terlebih dahulu untuk menambah keranjang." };
+
     const response = await fetch(`${BASE_URL}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 
@@ -35,20 +46,20 @@ export async function addToCart(payload: CartPayload, token: string) {
       return { error: data.message || "Gagal menambahkan ke keranjang" };
     }
 
-    return { success: true, message: "Berhasil ditambahkan ke keranjang!", data };
+    return { success: true, message: "Berhasil ditambahkan!", data };
   } catch (error) {
     return { error: "Gagal terhubung ke server percetakan." };
   }
 }
 
-export async function getCartItems(token: string) {
+export async function getCartItems() {
   try {
+    const headers = await getAuthHeader();
+    if (!headers) return { error: "Sesi habis, silakan login ulang." };
+
     const response = await fetch(`${BASE_URL}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
+      headers,
       cache: "no-store"
     });
 
@@ -64,27 +75,20 @@ export async function getCartItems(token: string) {
   }
 }
 
-export async function updateCartItemQty(id: number, qty: number, token: string) {
+export async function updateCartItemQty(id: number, qty: number) {
   if (!id || id === 0) return { error: "ID pesanan tidak valid" };
 
   try {
+    const headers = await getAuthHeader();
+    if (!headers) return { error: "Sesi habis." };
+
     const url = `${BASE_URL}/${id}`;
     
     const response = await fetch(url, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
+      headers,
       body: JSON.stringify({ qty: Number(qty) }),
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
-      console.error("Respons bukan JSON:", text);
-      return { error: `Server error (${response.status}). Cek terminal.` };
-    }
 
     const data = await response.json();
 
@@ -95,21 +99,23 @@ export async function updateCartItemQty(id: number, qty: number, token: string) 
     return { success: true, data: data.data };
   } catch (error) {
     console.error("FETCH ERROR:", error);
-    return { error: "Koneksi ke API terputus atau timeout." };
+    return { error: "Koneksi ke API terputus." };
   }
 }
 
-export async function deleteCartItem(id: number, token: string) {
+export async function deleteCartItem(id: number) {
   try {
+    const headers = await getAuthHeader();
+    if (!headers) return { error: "Sesi habis." };
+
     const response = await fetch(`${BASE_URL}/${id}`, {
       method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
+      headers
     });
 
     const data = await response.json();
     if (!response.ok) return { error: data.message || "Gagal menghapus pesanan" };
+    
     return { success: true, data };
   } catch (error) {
     return { error: "Gagal terhubung ke server." };

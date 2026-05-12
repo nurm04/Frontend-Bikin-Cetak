@@ -2,10 +2,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { CreditCard, MapPin, ShoppingBag, Loader2, ArrowLeft } from "lucide-react";
-import { createOrder, OrderItem } from "@/services/pesanService";
+import { CreditCard, MapPin, ShoppingBag, Loader2, ArrowLeft, Home } from "lucide-react";
+import { createOrder } from "@/services/pesanService";
+import { getUserAddresses, AddressItem } from "@/services/userService";
 import Link from "next/link";
 import CartProductItem from "@/components/shared/CardProductItem";
 
@@ -15,7 +15,7 @@ interface JasaTambahan {
 }
 
 interface CartStorageItem {
-  id: number;
+  id: string; // ID cart sekarang string sesuai data API
   item_code: string;
   variant_name: string;
   qty: number;
@@ -25,22 +25,7 @@ interface CartStorageItem {
 }
 
 interface MidtransResult {
-  status_code: string;
-  status_message: string;
-  transaction_id: string;
   order_id: string;
-  gross_amount: string;
-  payment_type: string;
-  transaction_time: string;
-  transaction_status: string;
-  pdf_url?: string;
-  finish_redirect_url?: string;
-}
-
-interface CreateOrderResponse {
-  snap_token?: string;
-  error?: string;
-  message?: string;
 }
 
 declare global {
@@ -52,25 +37,33 @@ declare global {
 export default function PesanClient() {
   const router = useRouter();
   const [items, setItems] = useState<CartStorageItem[]>([]);
+  const [alamatUtama, setAlamatUtama] = useState<AddressItem | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [isMounting, setIsMounting] = useState<boolean>(true);
 
-  const loadCheckoutData = useCallback(() => {
+  const loadInitialData = useCallback(async () => {
+    // 1. Load data checkout dari storage
     const savedData = localStorage.getItem("checkout_items");
     if (!savedData) return router.push("/cart");
 
     try {
       const parsedItems: CartStorageItem[] = JSON.parse(savedData);
       setItems(parsedItems);
-    } catch (e) { 
-      router.push("/cart"); 
-    } finally { 
-      setIsMounting(false); 
+
+      // 2. Load alamat utama dari API
+      const addrRes = await getUserAddresses();
+      if (Array.isArray(addrRes.data) && addrRes.data.length > 0) {
+        setAlamatUtama(addrRes.data[0]);
+      }
+    } catch (e) {
+      router.push("/cart");
+    } finally {
+      setIsMounting(false);
     }
   }, [router]);
 
   useEffect(() => {
-    loadCheckoutData();
+    loadInitialData();
     const midtransScriptUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
     const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "SB-Mid-client-xxxxxxxx";
     const script = document.createElement("script");
@@ -78,56 +71,44 @@ export default function PesanClient() {
     script.setAttribute("data-client-key", clientKey);
     script.async = true;
     document.body.appendChild(script);
-    return () => { 
+
+    return () => {
       const existingScript = document.querySelector(`script[src="${midtransScriptUrl}"]`);
-      if (existingScript) document.body.removeChild(existingScript); 
+      if (existingScript) document.body.removeChild(existingScript);
     };
-  }, [loadCheckoutData]);
+  }, [loadInitialData]);
 
   const handleCheckout = async (): Promise<void> => {
     if (items.length === 0) return;
-    
-    const token: string | null = localStorage.getItem("token");
-    if (!token) {
-      alert("Sesi login Anda sudah habis. Silakan login kembali.");
-      router.push("/login");
+    if (!alamatUtama) {
+      alert("Harap atur alamat pengiriman terlebih dahulu di profil.");
       return;
     }
 
     setLoading(true);
-    
-    const payload = { 
-      address_name: "Nurm house-Shipping", 
-      items: items.map(item => {
-        const totalJasa = (item.variant_lainnya || []).reduce(
-          (sum, j) => sum + j.price, 
-          0
-        );
 
-        return {
-          item_code: item.item_code,
-          item_name: item.variant_name,
-          qty: item.qty,
-          rate: item.price + totalJasa, 
-          jasa_tambahan: item.variant_lainnya || []
-        };
-      })
+    const payload = {
+      address_name: `${alamatUtama.address_title}-${alamatUtama.address_type}`,
+      selected_item_ids: items.map(item => item.id)
     };
 
     try {
-      const result = await createOrder(payload, token); 
+      const result = await createOrder(payload);
 
       if (result && result.snap_token) {
         window.snap.pay(result.snap_token, {
-          onSuccess: (midtransResult: MidtransResult) => { 
-            localStorage.removeItem("checkout_items"); 
-            router.push(`/pesan/status/${midtransResult.order_id}`); 
+          onSuccess: (midtransResult: MidtransResult) => {
+            localStorage.removeItem("checkout_items");
+            router.push(`/pesan/status/${midtransResult.order_id}`);
           },
+          onPending: () => alert("Menunggu pembayaran Anda."),
+          onError: () => alert("Pembayaran gagal, silakan coba lagi."),
         });
       } else {
-        alert("Gagal membuat pesanan. Silakan coba lagi atau cek koneksi.");
+        alert("Gagal membuat pesanan. Item mungkin sudah tidak tersedia atau sesi habis.");
       }
     } catch (err: unknown) {
+      alert("Terjadi kesalahan sistem.");
     } finally {
       setLoading(false);
     }
@@ -169,12 +150,23 @@ export default function PesanClient() {
                 <MapPin className="text-primary" size={20} />
                 <h2 className="text-xl font-black uppercase tracking-tight">Lokasi Pengiriman</h2>
               </div>
-              <div className="bg-base-200/50 p-6 rounded-2xl border border-dashed border-base-300 flex justify-between items-center">
-                <div>
-                  <p className="font-black text-sm uppercase tracking-tighter">Nurm House</p>
-                  <p className="text-xs font-bold opacity-60 mt-1">Sumenep, Madura - 69417</p>
+              <div className="bg-base-200/50 p-6 rounded-2xl border border-dashed border-base-300 flex justify-between items-center group">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Home size={20}/>
+                  </div>
+                  <div>
+                    <p className="font-black text-sm uppercase tracking-tighter">
+                      {alamatUtama ? alamatUtama.address_title : "Alamat Belum Ada"}
+                    </p>
+                    <p className="text-[10px] font-bold opacity-60 mt-1 uppercase leading-tight">
+                      {alamatUtama 
+                        ? `${alamatUtama.address_line1}, ${alamatUtama.city}, ${alamatUtama.state} - ${alamatUtama.pincode}` 
+                        : "Silakan atur alamat di profil."}
+                    </p>
+                  </div>
                 </div>
-                <button className="btn btn-ghost btn-xs uppercase font-bold text-[10px] opacity-50">Ubah</button>
+                <Link href="/profil/edit" className="btn btn-ghost btn-xs uppercase font-bold text-[10px] opacity-50 hover:opacity-100">Ubah</Link>
               </div>
             </div>
 
@@ -188,7 +180,7 @@ export default function PesanClient() {
                 {items.map((item) => (
                   <CartProductItem
                     key={item.id}
-                    id={item.id}
+                    id={0}
                     variant_name={item.variant_name}
                     price={item.price}
                     qty={item.qty}

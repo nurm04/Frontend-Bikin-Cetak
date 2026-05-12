@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'https://compression-researchers-boc-western.trycloudflare.com',
+        hostname: 'privileges-varying-button-periods.trycloudflare.com',
         port: '',
         pathname: '/**',
       },
