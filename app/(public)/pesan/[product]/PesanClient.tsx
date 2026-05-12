@@ -8,6 +8,7 @@ import { createOrder } from "@/services/pesanService";
 import { getUserAddresses, AddressItem } from "@/services/userService";
 import Link from "next/link";
 import CartProductItem from "@/components/shared/CardProductItem";
+import AlertPopup from "@/components/ui/AlertPopup";
 
 interface JasaTambahan {
   item_code: string;
@@ -15,7 +16,7 @@ interface JasaTambahan {
 }
 
 interface CartStorageItem {
-  id: string; // ID cart sekarang string sesuai data API
+  id: string;
   item_code: string;
   variant_name: string;
   qty: number;
@@ -26,11 +27,28 @@ interface CartStorageItem {
 
 interface MidtransResult {
   order_id: string;
+  status_code: string;
+  transaction_status: string;
+  [key: string]: string | number | undefined; 
+}
+
+interface PopupState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  type: "success" | "error" | "warning" | "info";
 }
 
 declare global {
   interface Window {
-    snap: { pay: (token: string, options: object) => void; };
+    snap: { 
+      pay: (token: string, options: {
+        onSuccess?: (result: MidtransResult) => void;
+        onPending?: (result: MidtransResult) => void;
+        onError?: (result: MidtransResult) => void;
+        onClose?: () => void;
+      }) => void; 
+    };
   }
 }
 
@@ -41,8 +59,14 @@ export default function PesanClient() {
   const [loading, setLoading] = useState<boolean>(false);
   const [isMounting, setIsMounting] = useState<boolean>(true);
 
+  const [popup, setPopup] = useState<PopupState>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info"
+  });
+
   const loadInitialData = useCallback(async () => {
-    // 1. Load data checkout dari storage
     const savedData = localStorage.getItem("checkout_items");
     if (!savedData) return router.push("/cart");
 
@@ -50,7 +74,6 @@ export default function PesanClient() {
       const parsedItems: CartStorageItem[] = JSON.parse(savedData);
       setItems(parsedItems);
 
-      // 2. Load alamat utama dari API
       const addrRes = await getUserAddresses();
       if (Array.isArray(addrRes.data) && addrRes.data.length > 0) {
         setAlamatUtama(addrRes.data[0]);
@@ -65,7 +88,7 @@ export default function PesanClient() {
   useEffect(() => {
     loadInitialData();
     const midtransScriptUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "SB-Mid-client-xxxxxxxx";
+    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "";
     const script = document.createElement("script");
     script.src = midtransScriptUrl;
     script.setAttribute("data-client-key", clientKey);
@@ -81,7 +104,12 @@ export default function PesanClient() {
   const handleCheckout = async (): Promise<void> => {
     if (items.length === 0) return;
     if (!alamatUtama) {
-      alert("Harap atur alamat pengiriman terlebih dahulu di profil.");
+      setPopup({
+        isOpen: true,
+        title: "Alamat Belum Diatur",
+        message: "Silakan atur alamat pengiriman terlebih dahulu di halaman profil.",
+        type: "warning"
+      });
       return;
     }
 
@@ -97,18 +125,46 @@ export default function PesanClient() {
 
       if (result && result.snap_token) {
         window.snap.pay(result.snap_token, {
-          onSuccess: (midtransResult: MidtransResult) => {
+          onSuccess: (res) => {
             localStorage.removeItem("checkout_items");
-            router.push(`/pesan/status/${midtransResult.order_id}`);
+            router.push(`/pesan/status/${res.order_id}`);
           },
-          onPending: () => alert("Menunggu pembayaran Anda."),
-          onError: () => alert("Pembayaran gagal, silakan coba lagi."),
+          onPending: (res) => {
+            localStorage.removeItem("checkout_items");
+            router.push(`/pesan/status/${res.order_id}`);
+          },
+          onError: () => {
+            setPopup({
+              isOpen: true,
+              title: "Pembayaran Gagal",
+              message: "Terjadi kesalahan saat memproses transaksi.",
+              type: "error"
+            });
+          },
+          onClose: () => {
+            setPopup({
+              isOpen: true,
+              title: "Transaksi Ditunda",
+              message: "Jendela pembayaran ditutup. Anda bisa melanjutkan nanti di riwayat pesanan.",
+              type: "info"
+            });
+          }
         });
       } else {
-        alert("Gagal membuat pesanan. Item mungkin sudah tidak tersedia atau sesi habis.");
+        setPopup({
+          isOpen: true,
+          title: "Gagal Membuat Pesanan",
+          message: "Pastikan koneksi stabil dan sesi login Anda masih aktif.",
+          type: "error"
+        });
       }
-    } catch (err: unknown) {
-      alert("Terjadi kesalahan sistem.");
+    } catch (err) {
+      setPopup({
+        isOpen: true,
+        title: "Sistem Bermasalah",
+        message: "Gagal terhubung ke server pembayaran.",
+        type: "error"
+      });
     } finally {
       setLoading(false);
     }
@@ -127,6 +183,17 @@ export default function PesanClient() {
 
   return (
     <main className="min-h-screen bg-base-200 py-6 px-4 md:px-8 relative">
+      <AlertPopup 
+        isOpen={popup.isOpen}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+        onCancel={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={() => {
+          setPopup(prev => ({ ...prev, isOpen: false }));
+          if (popup.title === "Alamat Kosong") router.push("/profil/edit");
+        }}
+      />
       <div className="max-w-7xl mx-auto">
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
