@@ -27,7 +27,7 @@ export interface AddressItem {
 // Update return type di fungsi-fungsi terkait di userService.ts lu
 // Contoh: export async function getUserAddresses(): Promise<{ data?: AddressItem[]; error?: string }>
 
-const BASE_URL = "https://bikincetak-api.up.railway.app/v1/user";
+const BASE_URL = "https://bikincetak.up.railway.app/v1/user";
 
 // Helper buat ambil cookie JWT di server
 async function getAuthHeader() {

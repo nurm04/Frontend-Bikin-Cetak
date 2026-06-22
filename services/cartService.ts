@@ -3,7 +3,7 @@
 
 import { cookies } from "next/headers";
 
-const BASE_URL = "https://bikincetak-api.up.railway.app/v1/cart";
+const BASE_URL = "https://bikincetak.up.railway.app/v1/cart";
 
 async function getAuthHeader() {
   const cookieStore = await cookies();

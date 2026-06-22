@@ -13,7 +13,7 @@ export interface OrderResponse {
   order_id: string;
 }
 
-const API_URL = "https://bikincetak-api.up.railway.app/v1/order";
+const API_URL = "https://bikincetak.up.railway.app/v1/order";
 
 async function getAuthHeader() {
   const cookieStore = await cookies();

@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'bikincetak-api.up.railway.app',
+        hostname: 'bikincetak.up.railway.app',
         port: '',
         pathname: '/**',
       },

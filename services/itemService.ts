@@ -42,7 +42,7 @@ export interface ApiVariantResponse {
   data: VariantDetail[];
 }
 
-const API_URL = "https://bikincetak-api.up.railway.app/v1/items";
+const API_URL = "https://bikincetak.up.railway.app/v1/items";
 
 export async function getItems(): Promise<ItemData[]> {
   try {
