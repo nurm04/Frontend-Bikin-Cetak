@@ -46,7 +46,7 @@ export default async function Produk({ params }: PageProps) {
   }
 
   // 2. Ambil semua list variant mentah dari API Railway
-  const variantUrl = `https://bikincetak-api.up.railway.app/v1/items/${encodeURIComponent(foundItem.item_name.trim())}`;
+  const variantUrl = `https://bikincetak.up.railway.app/v1/items/${encodeURIComponent(foundItem.item_name.trim())}`;
   
   try {
     const variantRes = await fetch(variantUrl, { cache: "no-store" });
