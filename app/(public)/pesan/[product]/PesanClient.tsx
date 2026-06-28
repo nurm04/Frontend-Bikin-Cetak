@@ -123,8 +123,8 @@ export default function PesanClient() {
     try {
       const result = await createOrder(payload);
 
-      if (result && result.snap_token) {
-        window.snap.pay(result.snap_token, {
+      if (result && result.success && result.data?.snap_token) {
+        window.snap.pay(result.data.snap_token, {
           onSuccess: (res) => {
             localStorage.removeItem("checkout_items");
             router.push(`/pesan/status/${res.order_id}`);
@@ -154,7 +154,7 @@ export default function PesanClient() {
         setPopup({
           isOpen: true,
           title: "Gagal Membuat Pesanan",
-          message: "Pastikan koneksi stabil dan sesi login Anda masih aktif.",
+          message: result?.error || "Terjadi kesalahan yang tidak diketahui.",
           type: "error"
         });
       }
